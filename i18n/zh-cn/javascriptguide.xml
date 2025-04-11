@@ -1,0 +1,3101 @@
+<?xml version = '1.0'?>
+<?xml-stylesheet type="text/xsl" href="styleguide.xsl"?>
+<GUIDE title="Google JavaScript Style Guide">
+  <p style="position: fixed; left: 0; top: 0; padding: 0.5em; margin: 0; background-color: #fef6e0; text-align: center; width: 100%; font-weight: bold;">
+    请注意：本指南已过时且不再更新。它作为参考保留，因为它是为ECMAScript第6版之前的功能编写的。
+    请改用<a href="jsguide.html">新的指南</a>。
+  </p>
+  <p class="revision">
+    修订版 2.93
+  </p>
+
+  <address>
+    Aaron Whyte<br/>
+    Bob Jervis<br/>
+    Dan Pupius<br/>
+    Erik Arvidsson<br/>
+    Fritz Schneider<br/>
+    Robby Walker<br/>
+  </address>
+  <OVERVIEW>
+    <CATEGORY title="重要说明">
+      <STYLEPOINT title="在本指南中显示隐藏细节">
+        <SUMMARY>
+          本风格指南包含许多最初隐藏的细节。它们由三角形图标标记，你现在在左侧可以看到。点击它。
+          你应该会看到下方出现“Hooray”。
+        </SUMMARY>
+        <BODY>
+          <p>
+            Hooray！现在你知道你可以展开点来获取更多细节。或者，在文档顶部有一个“全部切换”的选项。
+          </p>
+        </BODY>
+      </STYLEPOINT>
+    </CATEGORY>
+    <CATEGORY title="背景">
+      <p>
+        JavaScript是许多Google开源项目使用的主要客户端脚本语言。
+        本风格指南是JavaScript程序的“应该做”和“不应该做”的列表。
+      </p>
+    </CATEGORY>
+  </OVERVIEW>
+  <CATEGORY title="JavaScript语言规则">
+    <STYLEPOINT title="var">
+      <SUMMARY>
+        使用<code>var</code>声明：始终
+      </SUMMARY>
+      <BODY>
+        <DECISION>
+          如果你没有指定<code>var</code>，变量将被放置在全局上下文中，可能会覆盖现有值。此外，如果没有声明，很难判断变量在哪个作用域中（例如，它可能在文档或窗口中，就像在本地作用域中一样容易）。所以始终使用<code>var</code>声明。
+        </DECISION>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="常量">
+      <SUMMARY>
+        <ul>
+          <li>对常量<em>值</em>使用<code>NAMES_LIKE_THIS</code>。</li>
+          <li>使用<code>@const</code>来指示常量（不可覆盖的）<em>指针</em>（变量或属性）。</li>
+          <li>永远不要使用
+            <a href="https://developer.mozilla.org/en/JavaScript/Reference/Statements/const">
+              <code>const</code>关键字</a>
+            因为它在Internet Explorer中不受支持。</li>
+        </ul>
+      </SUMMARY>
+      <BODY>
+        <DECISION>
+          <SUBSECTION title="常量值">
+
+          <p>如果一个值旨在是<em>常量</em>和<em>不可变</em>的，它应该被赋予<code>CONSTANT_VALUE_CASE</code>格式的名称。
+             <code>ALL_CAPS</code>还暗示<code>@const</code>（该值不可覆盖）。
+           </p>
+
+           <p>原始类型（<code>number</code>，<code>string</code>，
+             <code>boolean</code>）是常量值。</p>
+
+           <p><code>Objects</code>的不可变性更为主观——只有当对象不显示可观察的状态变化时，才应认为它们是不可变的。这不是由编译器强制执行的。</p>
+
+
+           </SUBSECTION>
+<SUBSECTION title="常量指针（变量和属性）">
+            <p><code>@const</code> 注释在变量或属性上意味着它不可被覆盖。这在编译时由编译器强制执行。这种行为与 <a href="https://developer.mozilla.org/en/JavaScript/Reference/Statements/const"><code>const</code> 关键字</a>（由于 Internet Explorer 缺乏支持，我们不使用它）一致。</p>
+
+            <p>方法上的 <code>@const</code> 注释还意味着该方法不能在子类中被重写。</p>
+
+            <p>构造函数上的 <code>@const</code> 注释意味着该类不能被子类化（类似于 Java 中的 <code>final</code>）。</p>
+
+          </SUBSECTION>
+
+          <SUBSECTION title="示例">
+
+            <p>请注意，<code>@const</code> 并不一定意味着 <code>CONSTANT_VALUES_CASE</code>。
+
+              然而，<code>CONSTANT_VALUES_CASE</code> <em>确实</em> 意味着 <code>@const</code>。
+            </p>
+
+            <CODE_SNIPPET>
+              /**
+               * 请求超时时间，单位为毫秒。
+               * @type {number}
+               */
+              goog.example.TIMEOUT_IN_MILLISECONDS = 60;
+            </CODE_SNIPPET>
+
+            <p>一分钟的秒数永远不会改变。这是一个常量值。<code>ALL_CAPS</code> 也意味着 <code>@const</code>，因此常量不能被覆盖。
+            </p>
+
+            <p>开源编译器将允许覆盖该符号，因为常量 <em>未</em> 标记为 <code>@const</code>。</p>
+
+            <CODE_SNIPPET>
+              /**
+               * URL 到响应字符串的映射。
+               * @const
+               */
+              MyClass.fetchedUrlCache_ = new goog.structs.Map();
+            </CODE_SNIPPET>
+
+            <CODE_SNIPPET>
+              /**
+               * 不能被子类化的类。
+               * @const
+               * @constructor
+               */
+              sloth.MyFinalClass = function() {};
+            </CODE_SNIPPET>
+
+            <p>在这种情况下，指针永远不能被覆盖，但值是高度可变的且 <b>不是</b> 常量（因此使用 <code>camelCase</code>，而不是 <code>ALL_CAPS</code>）。</p>
+        </SUBSECTION>
+
+        </DECISION>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="分号">
+      <SUMMARY>
+        始终使用分号。
+      </SUMMARY>
+      <BODY>
+        <p>依赖隐式插入可能会导致难以调试的细微问题。不要这样做。你应该做得更好。</p>
+        <p>在某些地方，缺少分号特别危险：</p>
+        <BAD_CODE_SNIPPET>
+          // 1.
+          MyClass.prototype.myMethod = function() {
+            return 42;
+          }  // 此处没有分号。
+
+          (function() {
+            // 一些初始化代码包装在函数中以创建局部作用域。
+          })();
+
+
+          var x = {
+            'i': 1,
+            'j': 2
+          }  // 此处没有分号。
+
+          // 2. 尝试在 Internet Explorer 上做一件事，在 Firefox 上做另一件事。
+          // 我知道你永远不会写这样的代码，但请帮我一把。
+          [ffVersion, ieVersion][isIE]();
+
+
+          var THINGS_TO_EAT = [apples, oysters, sprayOnCheese]  // 此处没有分号。
+// 3. 条件执行类似于bash
+          -1 == resultOfOperation() || die();
+        </BAD_CODE_SNIPPET>
+        <SUBSECTION title="那么会发生什么？">
+          <ol>
+            <li>JavaScript错误 - 首先调用返回42的函数，并将第二个函数作为参数，然后调用数字42导致错误。</li>
+            <li>你很可能会在运行时得到一个“未定义中没有此属性”的错误，因为它试图调用<code>x[ffVersion, ieVersion][isIE]()</code>。</li>
+            <li><code>die</code>总是被调用，因为数组减1是<code>NaN</code>，它永远不等于任何东西（即使<code>resultOfOperation()</code>返回<code>NaN</code>），并且<code>THINGS_TO_EAT</code>被赋值为<code>die()</code>的结果。</li>
+          </ol>
+        </SUBSECTION>
+        <SUBSECTION title="为什么？">
+          <p>JavaScript要求语句以分号结束，除非它认为可以安全地推断出它们的存在。在这些例子中，函数声明或对象或数组字面量被用在语句内部。关闭括号不足以表示语句的结束。如果下一个标记是中缀或括号运算符，JavaScript永远不会结束语句。</p>
+          <p>这真的让人们感到惊讶，所以请确保你的赋值语句以分号结束。</p>
+        </SUBSECTION>
+        <SUBSECTION title="澄清：分号和函数">
+          <p>在函数表达式结束时应包含分号，但在函数声明结束时不应包含分号。最佳的区别说明可以通过一个例子来说明：</p>
+          <CODE_SNIPPET>
+            var foo = function() {
+              return true;
+            };  // 这里需要分号。
+
+            function foo() {
+              return true;
+            }  // 这里不需要分号。
+          </CODE_SNIPPET>
+        </SUBSECTION>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="嵌套函数">
+      <SUMMARY>是</SUMMARY>
+      <BODY>
+        <p>嵌套函数可以非常有用，例如在创建延续和隐藏辅助函数的任务中。请随意使用它们。</p>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="块内的函数声明">
+      <SUMMARY>否</SUMMARY>
+      <BODY>
+        <p>不要这样做：</p>
+        <BAD_CODE_SNIPPET>
+          if (x) {
+            function foo() {}
+          }
+        </BAD_CODE_SNIPPET>
+
+        <p>虽然大多数脚本引擎支持块内的函数声明，但这并不属于ECMAScript的一部分（参见<a href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMA-262</a>，第13和14条款）。更糟糕的是，实施之间以及与未来的EcmaScript提案不一致。ECMAScript只允许在脚本或函数的根语句列表中进行函数声明。相反，使用初始化为函数表达式的变量来在块内定义函数：</p>
+        <CODE_SNIPPET>
+           if (x) {
+             var foo = function() {};
+           }
+        </CODE_SNIPPET>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="异常">
+      <SUMMARY>是</SUMMARY>
+      <BODY>
+        <p>如果你在做一些非平凡的事情（使用应用程序开发框架等），你基本上无法避免异常。放手去做吧。</p>
+      </BODY>
+    </STYLEPOINT>
+<STYLEPOINT title="Custom exceptions">
+  <SUMMARY>是</SUMMARY>
+  <BODY>
+    <p>如果没有自定义异常，从一个同时返回值的函数中返回错误信息会变得棘手，更不用说不够优雅。糟糕的解决方案包括传入一个引用类型来保存错误信息，或者总是返回可能包含错误成员的对象。这些基本上相当于一种原始的异常处理技巧。在适当的时候，请随意使用自定义异常。</p>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="Standards features">
+  <SUMMARY>始终优先于非标准特性</SUMMARY>
+  <BODY>
+    <p>为了最大限度的便携性和兼容性，始终优先选择标准特性而不是非标准特性（例如，<code>string.charAt(3)</code> 优于 <code>string[3]</code>，以及使用DOM函数访问元素而不是使用特定于应用程序的简写）。</p>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="Wrapper objects for primitive types">
+  <SUMMARY>否</SUMMARY>
+  <BODY>
+    <p>没有理由使用原始类型的包装对象，而且它们还很危险：</p>
+    <BAD_CODE_SNIPPET>
+      var x = new Boolean(false);
+      if (x) {
+        alert('hi');  // 显示 'hi'。
+      }
+    </BAD_CODE_SNIPPET>
+    <p>不要这样做！</p>
+    <p>然而，类型转换是可以的。</p>
+    <CODE_SNIPPET>
+      var x = Boolean(0);
+      if (x) {
+        alert('hi');  // 这永远不会被提示。
+      }
+      typeof Boolean(0) == 'boolean';
+      typeof new Boolean(0) == 'object';
+    </CODE_SNIPPET>
+    <p>这对于将事物转换为 <code>number</code>、<code>string</code> 和 <code>boolean</code> 非常有用。</p>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="Multi-level prototype hierarchies">
+  <SUMMARY>不推荐</SUMMARY>
+  <BODY>
+    <p>多级原型层次结构是JavaScript实现继承的方式。如果你有一个用户定义的类D，其原型是另一个用户定义的类B，那么你就有了多级层次结构。这些层次结构比它们初看起来要难正确实现得多！</p>
+
+    <p>因此，最好使用来自 <a href="https://code.google.com/closure/library/">Closure库</a> 的 <code>goog.inherits()</code> 或类似的库函数。</p>
+    <CODE_SNIPPET>
+      function D() {
+        goog.base(this)
+      }
+      goog.inherits(D, B);
+
+      D.prototype.method = function() {
+        ...
+      };
+    </CODE_SNIPPET>
+  </BODY>
+</STYLEPOINT>
+<STYLEPOINT title="Method and property definitions">
+  <SUMMARY><code>/** @constructor */
+    function SomeConstructor() {
+      this.someProperty = 1;
+    }
+    Foo.prototype.someMethod = function() { ... };</code></SUMMARY>
+  <BODY>
+    <p>虽然有几种方法可以将方法和属性附加到通过"new"创建的对象上，但对于方法的首选风格是：</p>
+    <CODE_SNIPPET>
+      Foo.prototype.bar = function() {
+        /* ... */
+      };
+    </CODE_SNIPPET>
+    <p>对于其他属性的首选风格是在构造函数中初始化字段：</p>
+    <CODE_SNIPPET>
+      /** @constructor */
+      function Foo() {
+        this.bar = value;
+      }
+    </CODE_SNIPPET>
+    <SUBSECTION title="Why?">
+      <p>当前的JavaScript引擎基于对象的"形状"进行优化，<a href="https://developers.google.com/v8/design#prop_access">
+      添加属性到对象上（包括覆盖原型上设置的值）会改变形状并可能降低性能。</a></p>
+    </SUBSECTION>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="delete">
+  <SUMMARY>首选 <code>this.foo = null</code>。</SUMMARY>
+  <BODY>
+    <CODE_SNIPPET>
+      Foo.prototype.dispose = function() {
+        this.property_ = null;
+      };
+    </CODE_SNIPPET>
+    <p>而不是：</p>
+    <BAD_CODE_SNIPPET>
+      Foo.prototype.dispose = function() {
+        delete this.property_;
+      };
+    </BAD_CODE_SNIPPET>
+    <p>在现代JavaScript引擎中，改变对象上属性的数量比重新赋值要慢得多。应避免使用delete关键字，除非需要从对象的可迭代键列表中移除属性，或者改变<code>if (key in obj)</code>的结果。</p>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="Closures">
+  <SUMMARY>可以，但要小心。</SUMMARY>
+  <BODY>
+    <p>创建闭包的能力可能是JS中最有用且经常被忽视的功能。这里有一个<a href="http://jibbering.com/faq/faq_notes/closures.html">
+    关于闭包如何工作的好描述</a>。</p>
+    <p>然而，需要记住的一件事是，闭包保持对其封闭作用域的指针。因此，将闭包附加到DOM元素可能会创建循环引用，从而导致内存泄漏。例如，在以下代码中：</p>
+    <BAD_CODE_SNIPPET>
+      function foo(element, a, b) {
+        element.onclick = function() { /* uses a and b */ };
+      }
+    </BAD_CODE_SNIPPET>
+    <p>函数闭包保持对<code>element</code>、<code>a</code>和<code>b</code>的引用，即使它从未使用<code>element</code>。由于<code>element</code>也保持对闭包的引用，我们有一个不会被垃圾回收清理的循环。在这些情况下，代码可以按以下方式结构化：</p>
+    <CODE_SNIPPET>
+      function foo(element, a, b) {
+        element.onclick = bar(a, b);
+      }
+
+      function bar(a, b) {
+        return function() { /* uses a and b */ };
+      }
+    </CODE_SNIPPET>
+  </BODY>
+</STYLEPOINT>
+<STYLEPOINT title="eval()">
+  <SUMMARY>
+    仅用于代码加载器和REPL（读取-评估-打印循环）
+  </SUMMARY>
+  <BODY>
+    <p><code>eval()</code> 会导致语义混乱，并且如果被<code>eval()</code>的字符串包含用户输入，则使用它是危险的。通常有更好的、更清晰且更安全的方法来编写代码，因此通常不允许使用它。</p>
+
+    <p>对于RPC，您始终可以使用JSON并使用<code>JSON.parse()</code>读取结果，而不是<code>eval()</code>。</p>
+
+    <p>假设我们有一个服务器返回如下内容：</p>
+
+    <CODE_SNIPPET>
+      {
+        "name": "Alice",
+        "id": 31502,
+        "email": "looking_glass@example.com"
+      }
+    </CODE_SNIPPET>
+
+    <BAD_CODE_SNIPPET>
+      var userInfo = eval(feed);
+      var email = userInfo['email'];
+    </BAD_CODE_SNIPPET>
+
+    <p>如果feed被修改以包含恶意JavaScript代码，那么如果我们使用<code>eval</code>，这些代码将被执行。</p>
+
+    <CODE_SNIPPET>
+      var userInfo = JSON.parse(feed);
+      var email = userInfo['email'];
+    </CODE_SNIPPET>
+
+    <p>使用<code>JSON.parse</code>，无效的JSON（包括所有可执行的JavaScript）将引发异常。</p>
+
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="with() {}">
+  <SUMMARY>不</SUMMARY>
+  <BODY>
+    <p>使用<code>with</code>会使程序的语义变得模糊。因为<code>with</code>的对象可能具有与本地变量冲突的属性，它可以极大地改变程序的含义。例如，这会做什么？</p>
+    <BAD_CODE_SNIPPET>
+      with (foo) {
+        var x = 3;
+        return x;
+      }
+    </BAD_CODE_SNIPPET>
+    <p>答案：任何事。本地变量<code>x</code>可能会被<code>foo</code>的属性覆盖，并且它甚至可能有一个setter，在这种情况下，分配<code>3</code>可能会导致大量其他代码执行。不要使用<code>with</code>。</p>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="this">
+  <SUMMARY>
+    仅在对象构造函数、方法和设置闭包时使用
+  </SUMMARY>
+  <BODY>
+    <p><code>this</code>的语义可能很棘手。有时它指的是全局对象（在大多数地方）、调用者的作用域（在<code>eval</code>中）、DOM树中的一个节点（当使用事件处理程序HTML属性附加时）、一个新创建的对象（在构造函数中），或者其他对象（如果函数被<code>call()</code>或<code>apply()</code>调用）。</p>
+    <p>因为这很容易出错，请将其使用限制在需要的地方：</p>
+    <ul>
+      <li>在构造函数中</li>
+      <li>在对象的方法中（包括在创建闭包时）</li>
+    </ul>
+  </BODY>
+</STYLEPOINT>
+<STYLEPOINT title="for-in loop">
+  <SUMMARY>
+    仅用于遍历对象/映射/哈希中的键
+  </SUMMARY>
+  <BODY>
+    <p><code>for-in</code> 循环经常被错误地用于遍历 <code>Array</code> 中的元素。然而，这非常容易出错，因为它不是从 <code>0</code> 到 <code>length - 1</code> 循环，而是遍历对象及其原型链中的所有现有键。以下是一些它会失败的情况：</p>
+    <BAD_CODE_SNIPPET>
+      function printArray(arr) {
+        for (var key in arr) {
+          print(arr[key]);
+        }
+      }
+
+      printArray([0,1,2,3]);  // 这可以工作。
+
+      var a = new Array(10);
+      printArray(a);  // 这是错误的。
+
+      a = document.getElementsByTagName('*');
+      printArray(a);  // 这是错误的。
+
+      a = [0,1,2,3];
+      a.buhu = 'wine';
+      printArray(a);  // 这再次是错误的。
+
+      a = new Array;
+      a[3] = 3;
+      printArray(a);  // 这再次是错误的。
+    </BAD_CODE_SNIPPET>
+    <p>在使用数组时，始终使用普通的 for 循环。</p>
+    <CODE_SNIPPET>
+      function printArray(arr) {
+        var l = arr.length;
+        for (var i = 0; i &lt; l; i++) {
+          print(arr[i]);
+        }
+      }
+    </CODE_SNIPPET>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="Associative Arrays">
+  <SUMMARY>
+    永远不要将 <code>Array</code> 用作映射/哈希/关联数组
+  </SUMMARY>
+  <BODY>
+    <p>不允许使用关联 <code>Array</code>... 或者更准确地说，不允许对数组使用非数字索引。如果你需要一个映射/哈希，请使用 <code>Object</code> 而不是 <code>Array</code>，因为你想要的功能实际上是 <code>Object</code> 的功能，而不是 <code>Array</code> 的功能。<code>Array</code> 只是恰好扩展了 <code>Object</code>（就像 JS 中的任何其他对象一样，因此你也可以使用 <code>Date</code>、<code>RegExp</code> 或 <code>String</code>）。</p>
+  </BODY>
+</STYLEPOINT>
+
+<STYLEPOINT title="Multiline string literals">
+  <SUMMARY>不</SUMMARY>
+  <BODY>
+    <p>不要这样做：</p>
+    <BAD_CODE_SNIPPET>
+      var myString = 'A rather long string of English text, an error message \
+                          actually that just keeps going and going -- an error \
+                          message to make the Energizer bunny blush (right through \
+                          those Schwarzenegger shades)! Where was I? Oh yes, \
+                          you\'ve got an error and all the extraneous whitespace is \
+                          just gravy.  Have a nice day.';
+    </BAD_CODE_SNIPPET>
+    <p>每行开头的空白在编译时无法安全地去除；斜杠后的空白会导致棘手的错误。</p>
+    <p>请使用字符串连接代替：</p>
+    <CODE_SNIPPET>
+      var myString = 'A rather long string of English text, an error message ' +
+          'actually that just keeps going and going -- an error ' +
+          'message to make the Energizer bunny blush (right through ' +
+          'those Schwarzenegger shades)! Where was I? Oh yes, ' +
+          'you\'ve got an error and all the extraneous whitespace is ' +
+          'just gravy.  Have a nice day.';
+    </CODE_SNIPPET>
+  </BODY>
+</STYLEPOINT>
+<STYLEPOINT title="Array and Object literals">
+      <SUMMARY>是</SUMMARY>
+      <BODY>
+        <p>使用 <code>Array</code> 和 <code>Object</code> 字面量，而不是
+          <code>Array</code> 和 <code>Object</code> 构造函数。</p>
+        <p>数组构造函数由于其参数容易出错。</p>
+        <BAD_CODE_SNIPPET>
+          // 长度为3。
+          var a1 = new Array(x1, x2, x3);
+
+          // 长度为2。
+          var a2 = new Array(x1, x2);
+
+          // 如果x1是一个数字且为自然数，则长度将为x1。
+          // 如果x1是一个数字但不是自然数，这将抛出异常。
+          // 否则，数组将有一个元素，其值为x1。
+          var a3 = new Array(x1);
+
+          // 长度为0。
+          var a4 = new Array();
+        </BAD_CODE_SNIPPET>
+        <p>因此，如果有人更改代码以传递一个参数而不是两个参数，数组可能不会具有预期的长度。</p>
+        <p>为了避免这些奇怪的情况，始终使用更易读的数组字面量。</p>
+        <CODE_SNIPPET>
+          var a = [x1, x2, x3];
+          var a2 = [x1, x2];
+          var a3 = [x1];
+          var a4 = [];
+        </CODE_SNIPPET>
+        <p>对象构造函数没有相同的问题，但为了可读性和一致性，应使用对象字面量。</p>
+        <BAD_CODE_SNIPPET>
+          var o = new Object();
+
+          var o2 = new Object();
+          o2.a = 0;
+          o2.b = 1;
+          o2.c = 2;
+          o2['strange key'] = 3;
+        </BAD_CODE_SNIPPET>
+        <p>应写成：</p>
+        <CODE_SNIPPET>
+          var o = {};
+
+          var o2 = {
+            a: 0,
+            b: 1,
+            c: 2,
+            'strange key': 3
+          };
+        </CODE_SNIPPET>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="Modifying prototypes of builtin objects">
+      <SUMMARY>否</SUMMARY>
+      <BODY>
+        <p>严格禁止修改内置对象如 <code>Object.prototype</code> 和
+          <code>Array.prototype</code>。修改其他内置对象如 <code>Function.prototype</code> 虽然危险性较小，但仍会导致生产环境中难以调试的问题，应避免这样做。</p>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="Internet Explorer's Conditional Comments">
+      <SUMMARY>否</SUMMARY>
+      <BODY>
+        <p>不要这样做：</p>
+        <BAD_CODE_SNIPPET>
+        var f = function () {
+            /*@cc_on if (@_jscript) { return 2* @*/  3; /*@ } @*/
+        };
+        </BAD_CODE_SNIPPET>
+        <p>条件注释会妨碍自动化工具，因为它们可以在运行时改变JavaScript语法树。</p>
+      </BODY>
+    </STYLEPOINT>
+  </CATEGORY>
+```xml
+  <CATEGORY title="JavaScript Style Rules">
+    <STYLEPOINT title="命名">
+      <SUMMARY>
+        <p>一般来说，使用
+          <code>functionNamesLikeThis</code>,
+          <code>variableNamesLikeThis</code>,
+          <code>ClassNamesLikeThis</code>,
+          <code>EnumNamesLikeThis</code>,
+          <code>methodNamesLikeThis</code>,
+          <code>CONSTANT_VALUES_LIKE_THIS</code>,
+          <code>foo.namespaceNamesLikeThis.bar</code>, 和
+          <code>filenameslikethis.js</code>.
+        </p>
+      </SUMMARY>
+      <BODY>
+        <SUBSECTION title="属性和方法">
+          <ul>
+            <li><em>私有</em>属性和方法应以尾随下划线命名。
+              </li>
+            <li><em>受保护</em>属性和方法应不带尾随下划线命名（如公共的）。</li>
+          </ul>
+          <p>有关<em>私有</em>和<em>受保护</em>的更多信息，请阅读
+            <a href="#Visibility__private_and_protected_fields_">
+              可见性</a>部分。
+            </p>
+
+
+
+
+        </SUBSECTION>
+
+        <SUBSECTION title="方法和函数参数">
+          <p>可选函数参数应以<code>opt_</code>开头。</p>
+          <p>接受可变数量参数的函数应将最后一个参数命名为<code>var_args</code>。您不得在代码中引用
+            <code>var_args</code>；请使用<code>arguments</code>
+            数组。</p>
+          <p>可选和可变参数也可以在
+            <code>@param</code>注释中指定。虽然编译器接受任一约定，但建议同时使用两者。</p>
+
+        </SUBSECTION>
+
+        <SUBSECTION title="Getter和Setter">
+          <p>不鼓励使用EcmaScript 5的属性getter和setter。
+            但是，如果使用它们，那么getter不得更改可观察状态。</p>
+            <BAD_CODE_SNIPPET>
+              /**
+               * 错误 - 不要这样做。
+               */
+              var foo = { get next() { return this.nextId++; } };
+            </BAD_CODE_SNIPPET>
+        </SUBSECTION>
+
+        <SUBSECTION title="访问器函数">
+          <p>属性getter和setter方法不是必需的。
+            但是，如果使用它们，那么getter必须命名为
+            <code>getFoo()</code>，setter必须命名为
+            <code>setFoo(value)</code>。（对于布尔getter，
+            <code>isFoo()</code>也是可以接受的，并且通常听起来更自然。）</p>
+        </SUBSECTION>
+
+        <SUBSECTION title="命名空间">
+          <p>JavaScript没有内在的打包或命名空间支持。</p>
+          <p>全局名称冲突难以调试，并且当两个项目试图集成时，可能会导致难以解决的问题。为了能够共享通用的JavaScript代码，我们采用了防止冲突的约定。 </p>
+          <SUBSUBSECTION title="为全局代码使用命名空间">
+            <p><em>始终</em>在全局作用域中使用与项目或库相关的唯一伪命名空间前缀标识符。如果您正在处理“Project Sloth”，一个合理的伪命名空间将是<code>sloth.*</code>。</p>
+            <CODE_SNIPPET>
+              var sloth = {};
+
+              sloth.sleep = function() {
+                ...
+              };
+            </CODE_SNIPPET>
+```
+<p>许多JavaScript库，包括
+              <a href="https://code.google.com/closure/library/">
+                Closure库
+              </a>
+              和
+              <a href="http://www.dojotoolkit.org/">
+                Dojo工具包
+              </a>
+              为声明命名空间提供了高级函数。
+              请一致地声明你的命名空间。</p>
+            <CODE_SNIPPET>
+              goog.provide('sloth');
+
+              sloth.sleep = function() {
+                ...
+              };
+            </CODE_SNIPPET>
+          </SUBSUBSECTION>
+          <SUBSUBSECTION title="尊重命名空间的所有权">
+            <p>在选择子命名空间时，请确保父命名空间的所有者知道你在做什么。如果你开始一个为树懒制作帽子的项目，请确保树懒团队知道你正在使用<code>sloth.hats</code>。</p>
+
+          </SUBSUBSECTION>
+          <SUBSUBSECTION title="为外部代码和内部代码使用不同的命名空间">
+            <p>“外部代码”是指来自你代码库之外的代码，并且独立编译。内部和外部名称应严格分开。如果你使用一个外部库，该库在<code>foo.hats.*</code>中提供可用项，你的内部代码不应在<code>foo.hats.*</code>中定义所有符号，因为如果另一团队定义了新符号，这会导致问题。</p>
+            <BAD_CODE_SNIPPET>
+              foo.require('foo.hats');
+
+              /**
+               * 错误 - 不要这样做。
+               * @constructor
+               * @extends {foo.hats.RoundHat}
+               */
+              foo.hats.BowlerHat = function() {
+              };
+            </BAD_CODE_SNIPPET>
+            <p>如果你需要在外部命名空间上定义新的API，那么你应该明确导出公共API函数，并且只导出这些函数。你的内部代码应通过其内部名称调用内部API，以保持一致性，以便编译器能更好地优化它们。</p>
+            <CODE_SNIPPET>
+              foo.provide('googleyhats.BowlerHat');
+
+              foo.require('foo.hats');
+
+              /**
+               * @constructor
+               * @extends {foo.hats.RoundHat}
+               */
+              googleyhats.BowlerHat = function() {
+                ...
+              };
+
+              goog.exportSymbol('foo.hats.BowlerHat', googleyhats.BowlerHat);
+            </CODE_SNIPPET>
+
+
+          </SUBSUBSECTION>
+          <SUBSUBSECTION title="使用别名缩短长类型名称以提高可读性">
+            <p>如果这样做能提高可读性，请为完全限定类型使用本地别名。本地别名的名称应与类型的最后一部分匹配。</p>
+            <CODE_SNIPPET>
+              /**
+               * @constructor
+               */
+              some.long.namespace.MyClass = function() {
+              };
+
+              /**
+               * @param {some.long.namespace.MyClass} a
+               */
+              some.long.namespace.MyClass.staticHelper = function(a) {
+                ...
+              };
+<SUBSUBSECTION>
+            <CODE_SNIPPET>
+              myapp.main = function() {
+                var MyClass = some.long.namespace.MyClass;
+                var staticHelper = some.long.namespace.MyClass.staticHelper;
+                staticHelper(new MyClass());
+              };
+            </CODE_SNIPPET>
+            <p>不要创建命名空间的本地别名。命名空间只能使用<a href="#goog-scope">goog.scope</a>进行别名设置。</p>
+            <BAD_CODE_SNIPPET>
+              myapp.main = function() {
+                var namespace = some.long.namespace;
+                namespace.MyClass.staticHelper(new namespace.MyClass());
+              };
+            </BAD_CODE_SNIPPET>
+            <p>避免访问别名类型的属性，除非它是一个枚举类型。</p>
+            <CODE_SNIPPET>
+              /** @enum {string} */
+              some.long.namespace.Fruit = {
+                APPLE: 'a',
+                BANANA: 'b'
+              };
+
+              myapp.main = function() {
+                var Fruit = some.long.namespace.Fruit;
+                switch (fruit) {
+                  case Fruit.APPLE:
+                    ...
+                  case Fruit.BANANA:
+                    ...
+                }
+              };
+            </CODE_SNIPPET>
+            <BAD_CODE_SNIPPET>
+              myapp.main = function() {
+                var MyClass = some.long.namespace.MyClass;
+                MyClass.staticHelper(null);
+              };
+            </BAD_CODE_SNIPPET>
+            <p>永远不要在全局作用域中创建别名。仅在函数块中使用它们。</p>
+          </SUBSUBSECTION>
+        </SUBSECTION>
+        <SUBSECTION title="文件名">
+          <p>文件名应全部为小写，以避免在区分大小写的平台上引起混淆。文件名应以<code>.js</code>结尾，并且除<code>-</code>或<code>_</code>外不应包含任何标点符号（优先使用<code>-</code>而不是<code>_</code>）。</p>
+        </SUBSECTION>
+
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="自定义toString()方法">
+      <SUMMARY>
+        必须始终成功且无副作用。
+      </SUMMARY>
+      <BODY>
+        <p>您可以通过定义自定义<code>toString()</code>方法来控制对象如何进行字符串化处理。这是可以的，但您需要确保该方法（1）始终成功且（2）没有副作用。如果您的方不符合这些标准，很容易遇到严重问题。例如，如果<code>toString()</code>调用了一个执行<code>assert</code>的方法，<code>assert</code>可能会尝试输出失败对象的名称，这当然需要调用<code>toString()</code>。</p>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="延迟初始化">
+      <SUMMARY>可以</SUMMARY>
+      <BODY>
+        <p>并非总能在声明点初始化变量，因此延迟初始化是可以的。</p>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="显式作用域">
+      <SUMMARY>始终</SUMMARY>
+      <BODY>
+        <p>始终使用显式作用域 - 这样做可以提高可移植性和清晰度。例如，不要依赖<code>window</code>在作用域链中。你可能希望在另一个应用程序中使用你的函数，而该应用程序的<code>window</code>不是内容窗口。</p>
+      </BODY>
+    </STYLEPOINT>
+<STYLEPOINT title="Code formatting">
+      <SUMMARY>展开以获取更多信息。</SUMMARY>
+      <BODY>
+        <p>我们遵循<a href="cppguide.html#Formatting">C++格式化规则</a>的精神，并有以下额外的澄清说明。</p>
+        <SUBSECTION title="Curly Braces">
+          <p>由于隐式分号插入，总是将大括号放在它们所打开的同一行上。例如：</p>
+          <CODE_SNIPPET>
+            if (something) {
+              // ...
+            } else {
+              // ...
+            }
+          </CODE_SNIPPET>
+        </SUBSECTION>
+        <SUBSECTION title="Array and Object Initializers">
+          <p>当它们能在一行内显示时，允许使用单行数组和对象初始化器：</p>
+          <CODE_SNIPPET>
+            var arr = [1, 2, 3];  // No space after [ or before ].
+            var obj = {a: 1, b: 2, c: 3};  // No space after { or before }.
+          </CODE_SNIPPET>
+          <p>多行数组初始化器和对象初始化器缩进2个空格，大括号单独一行，就像块一样。</p>
+          <CODE_SNIPPET>
+            // Object initializer.
+            var inset = {
+              top: 10,
+              right: 20,
+              bottom: 15,
+              left: 12
+            };
+
+            // Array initializer.
+            this.rows_ = [
+              '"Slartibartfast" &lt;fjordmaster@magrathea.com&gt;',
+              '"Zaphod Beeblebrox" &lt;theprez@universe.gov&gt;',
+              '"Ford Prefect" &lt;ford@theguide.com&gt;',
+              '"Arthur Dent" &lt;has.no.tea@gmail.com&gt;',
+              '"Marvin the Paranoid Android" &lt;marv@googlemail.com&gt;',
+              'the.mice@magrathea.com'
+            ];
+
+            // Used in a method call.
+            goog.dom.createDom(goog.dom.TagName.DIV, {
+              id: 'foo',
+              className: 'some-css-class',
+              style: 'display:none'
+            }, 'Hello, world!');
+          </CODE_SNIPPET>
+          <p>长标识符或值会给对齐的初始化列表带来问题，因此总是优先选择非对齐的初始化。例如：</p>
+          <CODE_SNIPPET>
+            CORRECT_Object.prototype = {
+              a: 0,
+              b: 1,
+              lengthyName: 2
+            };
+          </CODE_SNIPPET>
+          <p>不像这样：</p>
+          <BAD_CODE_SNIPPET>
+            WRONG_Object.prototype = {
+              a          : 0,
+              b          : 1,
+              lengthyName: 2
+            };
+          </BAD_CODE_SNIPPET>
+        </SUBSECTION>
+        <SUBSECTION title="Function Arguments">
+          <p>在可能的情况下，所有的函数参数应列在同一行上。如果这样做会超过80列限制，参数必须以可读的方式换行。为了节省空间，你可以尽可能接近80列换行，或者将每个参数放在单独一行以增强可读性。缩进可以是四个空格，或者对齐到括号。以下是参数换行的最常见模式：</p>
+          <CODE_SNIPPET>
+            // 四空格，80列换行。适用于非常长的函数名，重新命名时无需重新缩进，节省空间。
+            goog.foo.bar.doThingThatIsVeryDifficultToExplain = function(
+                veryDescriptiveArgumentNumberOne, veryDescriptiveArgumentTwo,
+                tableModelEventHandlerProxy, artichokeDescriptorAdapterIterator) {
+              // ...
+            };
+<SUBSECTION title="函数参数的格式化">
+          <p>当函数调用本身缩进时，您可以选择从原始语句的开头或当前函数调用的开头开始进行4个空格的缩进。以下都是可接受的缩进风格。</p>
+          <CODE_SNIPPET>
+            if (veryLongFunctionNameA(
+                    veryLongArgumentName) ||
+                veryLongFunctionNameB(
+                veryLongArgumentName)) {
+              veryLongFunctionNameC(veryLongFunctionNameD(
+                  veryLongFunctioNameE(
+                      veryLongFunctionNameF)));
+            }
+          </CODE_SNIPPET>
+        </SUBSECTION>
+        <SUBSECTION title="传递匿名函数">
+          <p>在函数调用的参数列表中声明匿名函数时，函数体应从语句的左边缘或函数关键字的左边缘缩进两个空格。这样做是为了使匿名函数的函数体更易于阅读（即不会被压缩到屏幕的右半部分）。</p>
+          <CODE_SNIPPET>
+            prefix.something.reallyLongFunctionName('whatever', function(a1, a2) {
+              if (a1.equals(a2)) {
+                someOtherLongFunctionName(a1);
+              } else {
+                andNowForSomethingCompletelyDifferent(a2.parrot);
+              }
+            });
+<SUBSECTION title="使用goog.scope进行别名">
+  <a name="goog-scope"/>
+  <p>
+    <a href="https://docs.google.com/document/pub?id=1ETFAuh2kaXMVL-vafUYhaWlhl6b5D9TOvboVg7Zl68Y"><code>goog.scope</code></a>
+    可用于缩短在使用
+    <a href="https://code.google.com/closure/library/">Closure库</a>的程序中对命名空间符号的引用。</p>
+  <p>每个文件只能添加一个<code>goog.scope</code>调用。始终将其放置在全局作用域中。</p>
+  <p>打开的<code>goog.scope(function() {</code>调用必须前面有一个空行，并且跟随任何
+    <code>goog.provide</code>语句、<code>goog.require</code>语句或顶级注释。调用必须在文件的最后一行关闭。在作用域的关闭语句后附加<code>// goog.scope</code>。将注释与分号用两个空格分隔。</p>
+  <p>类似于C++命名空间，不要在goog.scope声明下缩进。相反，从第0列继续。</p>
+  <p>只为不会重新分配到另一个对象的名称创建别名（例如，大多数构造函数、枚举和命名空间）。不要这样做（请参阅下文如何为构造函数创建别名）：</p>
+
+  <BAD_CODE_SNIPPET>
+    goog.scope(function() {
+    var Button = goog.ui.Button;
+
+    Button = function() { ... };
+    ...
+  </BAD_CODE_SNIPPET>
+
+  <p>名称必须与它们所别名的全局的最后一个属性相同。</p>
+
+  <CODE_SNIPPET>
+    goog.provide('my.module.SomeType');
+
+    goog.require('goog.dom');
+    goog.require('goog.ui.Button');
+
+    goog.scope(function() {
+    var Button = goog.ui.Button;
+    var dom = goog.dom;
+
+    // 在构造函数声明之后为新类型创建别名。
+    my.module.SomeType = function() { ... };
+    var SomeType = my.module.SomeType;
+
+    // 如常在原型上声明方法：
+    SomeType.prototype.findButton = function() {
+      // 如上所述的Button别名。
+      this.button = new Button(dom.getElement('my-button'));
+    };
+    ...
+    });  // goog.scope
+  </CODE_SNIPPET>
+</SUBSECTION>
+<SUBSECTION title="缩进换行">
+  <p>除了<a href="#Array_and_Object_literals">数组字面量、对象字面量</a>和匿名函数之外，所有换行都应该缩进到与上面的兄弟表达式左对齐，或者比父表达式深四个空格（不是两个空格）（其中“兄弟”和“父”指的是括号嵌套级别）。</p>
+
+  <CODE_SNIPPET>
+    someWonderfulHtml = '<div class="' + getClassesForWonderfulHtml()'">' +
+                                getEvenMoreHtml(someReallyInterestingValues, moreValues,
+                                                evenMoreParams, 'a duck', true, 72,
+                                                slightlyMoreMonkeys(0xfff)) +
+                                '</div>';
+<SUBSECTION title="Variable and function names">
+  <p>变量和函数名可以很长。长名字不会自动换行，但如果它们太长而无法在一行中容纳，则可以将它们分成多行。例如:</p>
+  <CODE_SNIPPET>
+            thisIsAVeryLongVariableName =
+                hereIsAnEvenLongerOtherFunctionNameThatWillNotFitOnPrevLine();
+
+            thisIsAVeryLongVariableName = siblingOne + siblingTwo + siblingThree +
+                siblingFour + siblingFive + siblingSix + siblingSeven +
+                moreSiblingExpressions + allAtTheSameIndentationLevel;
+
+            thisIsAVeryLongVariableName = operandOne + operandTwo + operandThree +
+                operandFour + operandFive * (
+                    aNestedChildExpression + shouldBeIndentedMore);
+
+            someValue = this.foo(
+                shortArg,
+                'Some really long string arg - this is a pretty common case, actually.',
+                shorty2,
+                this.bar());
+
+            if (searchableCollection(allYourStuff).contains(theStuffYouWant) &amp;&amp;
+                !ambientNotification.isActive() &amp;&amp; (client.isAmbientSupported() ||
+                                                    client.alwaysTryAmbientAnyways())) {
+              ambientNotification.activate();
+            }
+          </CODE_SNIPPET>
+        </SUBSECTION>
+        <SUBSECTION title="空行">
+          <p>使用换行来分组逻辑上相关的代码片段。例如:</p>
+          <CODE_SNIPPET>
+            doSomethingTo(x);
+            doSomethingElseTo(x);
+            andThen(x);
+
+            nowDoSomethingWith(y);
+
+            andNowWith(z);
+          </CODE_SNIPPET>
+        </SUBSECTION>
+        <SUBSECTION title="二元和三元运算符">
+          <p>总是将运算符放在前一行的末尾。否则，换行和缩进遵循与其他Google风格指南相同的规则。这种运算符放置最初是由于对自动分号插入的担忧而达成一致的。实际上，在二元运算符之前不会发生分号插入，但为了保持一致性，新代码应遵循这种风格。</p>
+          <CODE_SNIPPET>
+            var x = a ? b : c;  // 如果能在一行内容纳，则全部放在一行。
+
+            // 缩进+4是可以的。
+            var y = a ?
+                longButSimpleOperandB : longButSimpleOperandC;
+
+            // 缩进到第一个操作数的行位置也是可以的。
+            var z = a ?
+                    moreComplicatedB :
+                    moreComplicatedC;
+          </CODE_SNIPPET>
+          <p>这包括点运算符。</p>
+          <CODE_SNIPPET>
+            var x = foo.bar().
+                doSomething().
+                doSomethingElse();
+          </CODE_SNIPPET>
+        </SUBSECTION>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="括号">
+      <SUMMARY>仅在必要时使用</SUMMARY>
+      <BODY>
+        <p>谨慎使用括号，通常仅在语法和语义要求时使用。</p>
+        <p>对于一元运算符如<code>delete</code>、<code>typeof</code>和<code>void</code>，或在<code>return</code>、<code>throw</code>等关键字之后，以及其他关键字（如<code>case</code>、<code>in</code>或<code>new</code>）之后，永远不要使用括号。</p>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="字符串">
+      <SUMMARY>优先使用'而不是"</SUMMARY>
+      <BODY>
+        <p>为了保持一致性，优先使用单引号(')而不是双引号(")。这在创建包含HTML的字符串时很有帮助:</p>
+        <CODE_SNIPPET>
+          var msg = 'This is <a href="http://foo">some HTML</a>';
+        </CODE_SNIPPET>
+      </BODY>
+    </STYLEPOINT>
+```xml
+    <STYLEPOINT title="Visibility (private and protected fields)">
+      <SUMMARY>推荐使用JSDoc注解<code>@private</code>和<code>@protected</code></SUMMARY>
+      <BODY>
+        <p>我们推荐使用JSDoc注解<code>@private</code>和<code>@protected</code>来指示类、函数和属性的可见性级别。</p>
+        <p>编译器标志--jscomp_warning=visibility会开启对可见性违规的编译器警告。请参阅<a href="https://code.google.com/p/closure-compiler/wiki/Warnings">Closure Compiler警告</a>。</p>
+        <p><code>@private</code>全局变量和函数只能被同一文件中的代码访问。</p>
+        <p>标记为<code>@private</code>的构造函数只能由同一文件中的代码及其静态和实例成员实例化。<code>@private</code>构造函数也可以在同一文件的任何地方访问其公共静态属性和通过<code>instanceof</code>操作符访问。</p>
+        <p>全局变量、函数和构造函数永远不应该被标注为<code>@protected</code>。</p>
+        <CODE_SNIPPET>
+          // 文件1。
+          // AA_PrivateClass_和AA_init_是可访问的，因为它们是全局的，并且在同一文件中。
+
+          /**
+           * @private
+           * @constructor
+           */
+          AA_PrivateClass_ = function() {
+          };
+
+          /** @private */
+          function AA_init_() {
+            return new AA_PrivateClass_();
+          }
+
+          AA_init_();
+        </CODE_SNIPPET>
+        <p><code>@private</code>属性可被同一文件中的所有代码访问，以及如果该属性属于类，则该类的所有静态方法和实例方法都可以访问。它们不能从不同文件中的子类访问或重写。</p>
+        <p><code>@protected</code>属性可被同一文件中的所有代码访问，以及任何拥有该属性的类的子类的任何静态方法和实例方法都可以访问。</p>
+        <p>请注意，这些语义与C++和Java的语义不同，因为它们允许同一文件中的所有代码访问私有和受保护的内容，而不仅仅是同一类或类层次结构中的代码。此外，与C++不同，私有属性不能被子类重写。
+        </p>
+        <CODE_SNIPPET>
+          // 文件1。
+
+          /** @constructor */
+          AA_PublicClass = function() {
+            /** @private */
+            this.privateProp_ = 2;
+
+            /** @protected */
+            this.protectedProp = 4;
+          };
+
+          /** @private */
+          AA_PublicClass.staticPrivateProp_ = 1;
+
+          /** @protected */
+          AA_PublicClass.staticProtectedProp = 31;
+
+          /** @private */
+          AA_PublicClass.prototype.privateMethod_ = function() {};
+
+          /** @protected */
+          AA_PublicClass.prototype.protectedMethod = function() {};
+
+          // 文件2。
+
+          /**
+           * @return {number} 我们排成一行的鸭子的数量。
+           */
+          AA_PublicClass.prototype.method = function() {
+            // 合法访问这两个属性。
+            return this.privateProp_ + AA_PublicClass.staticPrivateProp_;
+          };
+
+          // 文件3。
+        </CODE_SNIPPET>
+      </BODY>
+    </STYLEPOINT>
+```
+```xml
+          /**
+           * @constructor
+           * @extends {AA_PublicClass}
+           */
+          AA_SubClass = function() {
+            // 合法访问受保护的静态属性。
+            AA_PublicClass.staticProtectedProp = this.method();
+          };
+          goog.inherits(AA_SubClass, AA_PublicClass);
+
+          /**
+           * @return {number} 我们排成一行的鸭子的数量。
+           */
+          AA_SubClass.prototype.method = function() {
+            // 合法访问受保护的实例属性。
+            return this.protectedProp;
+          };
+        </CODE_SNIPPET>
+
+        <p>请注意，在JavaScript中，类型（如<code>AA_PrivateClass_</code>）和该类型的构造函数之间没有区别。没有办法表达一个类型是公共的而它的构造函数是私有的（因为构造函数可以很容易地被别名，从而规避隐私检查）。</p>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="JavaScript类型">
+      <SUMMARY>编译器鼓励和强制执行。</SUMMARY>
+      <BODY>
+        <a name="JsTypes"/>
+        <p>在JSDoc中记录类型时，尽可能具体和准确。我们支持的类型基于<a href="http://wiki.ecmascript.org/doku.php?id=spec:spec">EcmaScript 4规范</a>。</p>
+        <SUBSECTION title="JavaScript类型语言">
+          <p>ES4提案包含了一种指定JavaScript类型的语言。我们在JsDoc中使用这种语言来表达函数参数和返回值的类型。</p>
+
+          <p>随着ES4提案的发展，这种语言也发生了变化。编译器仍然支持旧的类型语法，但这些语法已被废弃。</p>
+
+          <p/>
+          <table border="1" style="border-collapse:collapse" cellpadding="4">
+            <thead>
+              <tr>
+                <th>语法名称</th>
+                <th>语法</th>
+                <th>描述</th>
+                <th>废弃的语法</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>原始类型</td>
+                <td>
+                  JavaScript中有5种原始类型：
+                  <code>{null}</code>,
+                  <code>{undefined}</code>,
+                  <code>{boolean}</code>,
+                  <code>{number}</code>, 和
+                  <code>{string}</code>.
+                </td>
+                <td>只是类型的名称。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>实例类型</td>
+                <td>
+                  <code>{Object}</code><br/>
+                  Object的实例或null。<p/>
+                  <code>{Function}</code><br/>
+                  Function的实例或null。<p/>
+                  <code>{EventTarget}</code><br/>
+                  实现EventTarget接口的构造函数的实例，或null。
+                </td>
+                <td>构造函数或接口函数的实例。<p/>
+
+                构造函数是使用<code>@constructor</code> JSDoc标签定义的函数。
+                接口函数是使用<code>@interface</code> JSDoc标签定义的函数。<p/>
+
+                默认情况下，实例类型将接受null。这是唯一使类型可空的类型语法。此表中的其他类型语法不会接受null。
+                </td>
+                <td/>
+              </tr>
+```
+<tr>
+                <td>枚举类型</td>
+                <td>
+                  <code>{goog.events.EventType}</code><br/>
+                  <code>goog.events.EventType</code> 对象字面量初始化器的一个属性。
+                </td>
+                <td>枚举必须作为对象字面量初始化，或者作为另一个枚举的别名，并使用 <code>@enum</code> JSDoc 标签进行注释。此字面量的属性是枚举的实例。枚举的语法在<a href="#enums">下方</a>定义。<p/>
+
+                请注意，这是我们类型系统中为数不多不在 ES4 规范中的内容之一。
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>类型应用</td>
+                <td>
+                  <code>{Array.&lt;string&gt;}</code><br/>字符串数组。<p/>
+                  <code>{Object.&lt;string, number&gt;}</code>
+                  <br/>一个对象，其键为字符串，值为数字。
+                </td>
+                <td>通过将一组类型参数应用于该类型来参数化类型。其思想类似于 Java 中的泛型。
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>类型联合</td>
+                <td>
+                  <code>{(number|boolean)}</code><br/>数字或布尔值。
+                </td>
+                <td>表示一个值可能具有类型 A 或类型 B。<p/>
+
+                  在顶级表达式中可以省略括号，但在子表达式中应包含括号以避免歧义。<br/>
+                  <code>{number|boolean}</code><br/>
+                  <code>{function(): (number|boolean)}</code>
+                </td>
+                <td>
+                  <code>{(number,boolean)}</code>,<br/>
+                  <code>{(number||boolean)}</code>
+                </td>
+              </tr>
+
+              <tr>
+                <td>可空类型</td>
+                <td>
+                  <code>{?number}</code><br/> 数字或 null。
+                </td>
+                <td>表示 null 类型与任何其他类型的联合。这是语法糖。
+                </td>
+                <td>
+                  <code>{number?}</code>
+                </td>
+              </tr>
+
+              <tr>
+                <td>非空类型</td>
+                <td>
+                  <code>{!Object}</code><br/> 一个对象，但绝不是 <code>null</code> 值。
+                </td>
+                <td>从可空类型中过滤掉 null。最常用于实例类型，这些类型默认是可空的。
+                </td>
+                <td>
+                  <code>{Object!}</code>
+                </td>
+              </tr>
+
+              <tr>
+                <td>记录类型</td>
+                <td>
+                  <code>{{myNum: number, myObject}}</code>
+                  <br/>具有给定类型成员的匿名类型。
+                </td>
+                <td>
+                  <p>表示值具有指定的成员和指定的类型。在这种情况下，<code>myNum</code> 类型为 <code>number</code>，<code>myObject</code> 类型为任意类型。</p>
+                  <p>请注意，大括号是类型语法的一部分。例如，要表示具有 <code>length</code> 属性的对象数组，您可以写成 <code>Array.&lt;{length}&gt;</code>。</p>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>函数类型</td>
+                <td>
+                  <code>{function(string, boolean)}</code><br/>
+                  一个接受两个参数（一个字符串和一个布尔值）的函数，返回值未知。<br/>
+                </td>
+                <td>指定一个函数。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>函数返回类型</td>
+                <td>
+                  <code>{function(): number}</code><br/>
+                  一个不接受参数并返回数字的函数。<br/>
+                </td>
+                <td>指定函数返回类型。</td>
+                <td/>
+              </tr>
+<tr>
+                <td>函数 <code>this</code> 类型</td>
+                <td>
+                  <code>{function(this:goog.ui.Menu, string)}</code><br/>
+                  一个接受一个参数（字符串）的函数，并在 goog.ui.Menu 的上下文中执行。
+                </td>
+                <td>指定函数类型的上下文类型。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>函数 <code>new</code> 类型</td>
+                <td>
+                  <code>{function(new:goog.ui.Menu, string)}</code><br/>
+                  一个构造函数，接受一个参数（字符串），并在使用 'new' 关键字调用时创建一个新的 goog.ui.Menu 实例。
+                </td>
+                <td>指定构造函数的构造类型。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>可变参数</td>
+                <td>
+                  <code>{function(string, ...[number]): number}</code><br/>
+                  一个函数，接受一个参数（字符串），然后是可变数量的必须为数字的参数。
+                </td>
+                <td>指定函数的可变参数。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>
+                  <a name="var-args-annotation"/>
+                  可变参数（在 <code>@param</code> 注解中）
+                </td>
+                <td>
+                  <code>@param {...number} var_args</code><br/>
+                  一个注解函数的可变数量的参数。
+                </td>
+                <td>
+                  指定注解函数接受可变数量的参数。
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>函数 <a href="#optional">可选参数</a></td>
+                <td>
+                  <code>{function(?string=, number=)}</code><br/>
+                  一个函数，接受一个可选的、可空的字符串和一个可选的数字作为参数。 <code>=</code> 语法仅用于 <code>function</code> 类型声明。
+                </td>
+                <td>指定函数的可选参数。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>
+                  <a name="optional-arg-annotation"/>
+                  函数 <a href="#optional">可选参数</a>（在 <code>@param</code> 注解中）
+                </td>
+                <td>
+                  <code>@param {number=} opt_argument</code><br/>
+                  一个类型为 <code>number</code> 的可选参数。
+                </td>
+                <td>指定注解函数接受一个可选参数。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>ALL 类型</td>
+                <td><code>{*}</code></td>
+                <td>表示变量可以接受任何类型。</td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>UNKNOWN 类型</td>
+                <td><code>{?}</code></td>
+                <td>表示变量可以接受任何类型，且编译器不应对其使用进行类型检查。</td>
+                <td/>
+              </tr>
+            </tbody>
+          </table>
+        </SUBSECTION>
+        <SUBSECTION title="JavaScript 中的类型">
+          <p/>
+          <table border="1" style="border-collapse:collapse" cellpadding="4">
+            <thead>
+              <tr>
+                <th>类型示例</th>
+                <th>值示例</th>
+                <th>描述</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              <tr>
+                <td>number</td>
+                <td>
+                  <CODE_SNIPPET>
+                    1
+                    1.0
+                    -5
+                    1e5
+                    Math.PI
+                  </CODE_SNIPPET>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>Number</td>
+                <td>
+                  <CODE_SNIPPET>
+                    new Number(true)
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <a href="#Wrapper_objects_for_primitive_types">
+                    Number 对象
+                  </a>
+                </td>
+              </tr>
+
+              <tr>
+                <td>string</td>
+                <td>
+                  <CODE_SNIPPET>
+                    'Hello'
+                    "World"
+                    String(42)
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  字符串值
+                </td>
+              </tr>
+<tr>
+                <td>String</td>
+                <td>
+                  <CODE_SNIPPET>
+                    new String('Hello')
+                    new String(42)
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <a href="#Wrapper_objects_for_primitive_types">
+                    String对象
+                  </a>
+                </td>
+              </tr>
+
+              <tr>
+                <td>boolean</td>
+                <td>
+                  <CODE_SNIPPET>
+                    true
+                    false
+                    Boolean(0)
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  布尔值
+                </td>
+              </tr>
+
+              <tr>
+                <td>Boolean</td>
+                <td>
+                  <CODE_SNIPPET>
+                    new Boolean(true)
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <a href="#Wrapper_objects_for_primitive_types">
+                    Boolean对象
+                  </a>
+                </td>
+              </tr>
+
+              <tr>
+                <td>RegExp</td>
+                <td>
+                  <CODE_SNIPPET>
+                    new RegExp('hello')
+                    /world/g
+                  </CODE_SNIPPET></td><td>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Date</td>
+                <td>
+                  <CODE_SNIPPET>
+                    new Date
+                    new Date()
+                  </CODE_SNIPPET></td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>
+
+                  null
+
+                </td>
+                <td>
+                  <CODE_SNIPPET>
+                    null
+                  </CODE_SNIPPET>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>
+
+                  undefined
+
+                </td>
+                <td>
+                  <CODE_SNIPPET>
+                    undefined
+                  </CODE_SNIPPET>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>void</td>
+                <td>
+                  <CODE_SNIPPET>
+                    function f() {
+                      return;
+                    }
+                  </CODE_SNIPPET>
+                </td>
+                <td>无返回值</td>
+              </tr>
+
+              <tr>
+                <td>Array</td>
+                <td>
+                  <CODE_SNIPPET>
+                    ['foo', 0.3, null]
+                    []
+                  </CODE_SNIPPET>
+                </td>
+                <td>无类型数组</td>
+              </tr>
+
+              <tr>
+                <td>Array.&lt;number&gt;</td>
+                <td>
+                  <CODE_SNIPPET>
+                    [11, 22, 33]
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  数字数组
+                </td>
+              </tr>
+
+              <tr>
+                <td>Array.&lt;Array.&lt;string&gt;&gt;</td>
+                <td>
+                  <CODE_SNIPPET>
+                    [['one', 'two', 'three'], ['foo', 'bar']]
+                  </CODE_SNIPPET>
+                </td>
+                <td>字符串数组的数组</td>
+              </tr>
+
+              <tr>
+                <td>Object</td>
+                <td>
+                  <CODE_SNIPPET>
+                    {}
+                    {foo: 'abc', bar: 123, baz: null}
+                  </CODE_SNIPPET>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>Object.&lt;string&gt;</td>
+                <td>
+                  <CODE_SNIPPET>
+                    {'foo': 'bar'}
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  值为字符串的对象。
+                </td>
+              </tr>
+
+              <tr>
+                <td>Object.&lt;number, string&gt;</td>
+                <td>
+                  <CODE_SNIPPET>
+                    var obj = {};
+                    obj[1] = 'bar';
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  键为数字且值为字符串的对象。  <p/>请注意，在JavaScript中，键总是隐式转换为字符串，因此
+                  <code>obj['1'] == obj[1]</code>。
+                  因此，在for...in循环中键总是字符串。但编译器会在索引对象时验证键的类型。
+                </td>
+              </tr>
+
+              <tr>
+                <td>Function</td>
+                <td>
+                  <CODE_SNIPPET>
+                    function(x, y) {
+                      return x * y;
+                    }
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <a href="#Wrapper_objects_for_primitive_types">
+                    Function对象
+                  </a>
+                </td>
+              </tr>
+
+              <tr>
+                <td>function(number, number): number</td>
+                <td>
+                  <CODE_SNIPPET>
+                    function(x, y) {
+                      return x * y;
+                    }
+                  </CODE_SNIPPET>
+                </td>
+                <td>函数值</td>
+              </tr>
+<tr>
+                <td><a name="constructor-tag">SomeClass</a></td>
+                <td>
+                  <CODE_SNIPPET>
+                    /** @constructor */
+                    function SomeClass() {}
+
+                    new SomeClass();
+                  </CODE_SNIPPET>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>SomeInterface</td>
+                <td>
+                  <CODE_SNIPPET>
+                    /** @interface */
+                    function SomeInterface() {}
+
+                    SomeInterface.prototype.draw = function() {};
+                  </CODE_SNIPPET>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>project.MyClass</td>
+                <td>
+                  <CODE_SNIPPET>
+                    /** @constructor */
+                    project.MyClass = function () {}
+
+                    new project.MyClass()
+                  </CODE_SNIPPET>
+                </td>
+                <td/>
+              </tr>
+
+              <tr>
+                <td>project.MyEnum</td>
+                <td>
+                  <CODE_SNIPPET>
+                    /** @enum {string} */
+                    project.MyEnum = {
+                      /** 蓝色。 */
+                      BLUE: '#0000dd',
+                      /** 红色。 */
+                      RED: '#dd0000'
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td><a name="enums">枚举</a><p/>
+                  枚举值上的JSDoc注释是可选的。
+                </td>
+              </tr>
+
+              <tr>
+                <td>Element</td>
+                <td>
+                  <CODE_SNIPPET>
+                    document.createElement('div')
+                  </CODE_SNIPPET>
+                </td>
+                <td>DOM中的元素。</td>
+              </tr>
+
+              <tr>
+                <td>Node</td>
+                <td>
+                  <CODE_SNIPPET>
+                    document.body.firstChild
+                  </CODE_SNIPPET>
+                </td>
+                <td>DOM中的节点。</td>
+              </tr>
+
+              <tr>
+                <td>HTMLInputElement</td>
+                <td>
+                  <CODE_SNIPPET>
+                    htmlDocument.getElementsByTagName('input')[0]
+                  </CODE_SNIPPET>
+                </td>
+                <td>DOM元素的特定类型。</td>
+              </tr>
+            </tbody>
+          </table>
+        </SUBSECTION>
+
+        <SUBSECTION title="类型转换">
+          <p>在类型检查无法准确推断表达式类型的情况下，可以通过添加类型注释注释并将表达式括在括号中来添加类型转换注释。括号是必需的。</p>
+
+          <CODE_SNIPPET>
+            /** @type {number} */ (x)
+          </CODE_SNIPPET>
+        </SUBSECTION>
+
+        <SUBSECTION title="可空与可选参数和属性">
+          <a name="optional"/>
+          <p>由于JavaScript是一种 loosely-typed 语言，因此理解可选、可空和未定义的函数参数和类属性的细微差别非常重要。</p>
+
+          <p>类和接口的实例默认是可空的。例如，以下声明</p>
+
+          <CODE_SNIPPET>
+            /**
+             * 某个类，使用一个值进行初始化。
+             * @param {Object} value 某个值。
+             * @constructor
+             */
+            function MyClass(value) {
+              /**
+               * 某个值。
+               * @type {Object}
+               * @private
+               */
+              this.myValue_ = value;
+            }
+          </CODE_SNIPPET>
+
+          <p>告诉编译器<code>myValue_</code>属性持有的是一个Object或null。如果<code>myValue_</code>永远不能为null，它应该这样声明：</p>
+
+          <CODE_SNIPPET>
+            /**
+             * 某个类，使用一个非空值进行初始化。
+             * @param {!Object} value 某个值。
+             * @constructor
+             */
+            function MyClass(value) {
+              /**
+               * 某个值。
+               * @type {!Object}
+               * @private
+               */
+              this.myValue_ = value;
+            }
+          </CODE_SNIPPET>
+<p>这样，如果编译器能够确定代码中的某个地方<code>MyClass</code>被初始化为null值，它将发出警告。</p>
+
+<p>函数的可选参数在运行时可能未定义，因此如果它们被赋值给类属性，这些属性必须相应地声明：</p>
+
+<CODE_SNIPPET>
+            /**
+             * 某个类，使用可选值进行初始化。
+             * @param {Object=} opt_value 某个值（可选）。
+             * @constructor
+             */
+            function MyClass(opt_value) {
+              /**
+               * 某个值。
+               * @type {Object|undefined}
+               * @private
+               */
+              this.myValue_ = opt_value;
+            }
+</CODE_SNIPPET>
+
+<p>这告诉编译器<code>myValue_</code>可能包含一个对象、null值或保持未定义状态。</p>
+
+<p>请注意，可选参数<code>opt_value</code>被声明为类型<code>{Object=}</code>，而不是<code>{Object|undefined}</code>。这是因为根据定义，可选参数可能未定义。虽然明确声明可选参数可能未定义没有害处，但这既不必要又使代码更难阅读。</p>
+
+<p>最后，请注意，可空性和可选性是正交的属性。以下四个声明都是不同的：</p>
+
+<CODE_SNIPPET>
+            /**
+             * 接受四个参数，其中两个可空，两个可选。
+             * @param {!Object} nonNull 必需（不得未定义），不得为null。
+             * @param {Object} mayBeNull 必需（不得未定义），可为null。
+             * @param {!Object=} opt_nonNull 可选（可能未定义），但如果存在，则不得为null！
+             * @param {Object=} opt_mayBeNull 可选（可能未定义），可为null。
+             */
+            function strangeButTrue(nonNull, mayBeNull, opt_nonNull, opt_mayBeNull) {
+              // ...
+            };
+</CODE_SNIPPET>
+
+<SUBSECTION title="类型定义">
+          <a name="Typedefs"/>
+          <p>有时类型会变得复杂。一个接受元素内容的函数可能看起来像这样：</p>
+
+<CODE_SNIPPET>
+            /**
+             * @param {string} tagName
+             * @param {(string|Element|Text|Array.&lt;Element&gt;|Array.&lt;Text&gt;)} contents
+             * @return {!Element}
+             */
+            goog.createElement = function(tagName, contents) {
+              ...
+            };
+</CODE_SNIPPET>
+
+<p>你可以使用<code>@typedef</code>标签定义常用的类型表达式。例如，</p>
+
+<CODE_SNIPPET>
+            /** @typedef {(string|Element|Text|Array.&lt;Element&gt;|Array.&lt;Text&gt;)} */
+            goog.ElementContent;
+
+            /**
+             * @param {string} tagName
+             * @param {goog.ElementContent} contents
+             * @return {!Element}
+             */
+            goog.createElement = function(tagName, contents) {
+            ...
+            };
+</CODE_SNIPPET>
+
+</SUBSECTION>
+
+<SUBSECTION title="模板类型">
+          <a name="Template_types"/>
+          <p>编译器对模板类型的支持有限。它只能从<code>this</code>参数的类型以及<code>this</code>参数是否缺失来推断匿名函数字面量中<code>this</code>的类型。</p>
+```xml
+    <STYLEPOINT title="代码示例">
+      <SUMMARY>代码示例</SUMMARY>
+      <BODY>
+        <SUBSECTION>
+          <CODE_SNIPPET>
+            /**
+             * @param {function(this:T, ...)} fn
+             * @param {T} thisObj
+             * @param {...*} var_args
+             * @template T
+             */
+            goog.bind = function(fn, thisObj, var_args) {
+            ...
+            };
+            // 可能生成缺少属性的警告。
+            goog.bind(function() { this.someProperty; }, new SomeClass());
+            // 生成未定义的this警告。
+            goog.bind(function() { this.someProperty; });
+          </CODE_SNIPPET>
+        </SUBSECTION>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="注释">
+      <SUMMARY>使用JSDoc</SUMMARY>
+      <BODY>
+        <p>
+          我们遵循
+          <a href="cppguide.html#Comments">
+            C++风格的注释</a>精神。
+        </p>
+
+        <p>所有文件、类、方法和属性都应使用
+          <a href="https://code.google.com/p/jsdoc-toolkit/">JSDoc</a>
+          注释进行文档化，并使用适当的<a href="#JSDoc_Tag_Reference">标签</a>
+          和<a href="#JsTypes">类型</a>。除非从属性、方法或参数名称中显然可以看出，否则应包含属性、
+          方法、方法参数和方法返回值的文本描述。
+        </p>
+
+        <p>内联注释应使用<code>//</code>样式。</p>
+
+        <p>推荐但不要求使用完整句子。
+        完整句子应使用适当的大写和标点符号。</p>
+
+        <SUBSECTION title="注释语法">
+          <p>JSDoc语法基于
+          <a href="https://www.oracle.com/technetwork/java/javase/documentation/index-137868.html">
+          JavaDoc</a>。许多工具从JSDoc注释中提取元数据以执行代码验证和优化。这些注释必须格式正确。</p>
+
+          <CODE_SNIPPET>
+          /**
+           * JSDoc注释应以斜杠和两个星号开始。
+           * 内联标签应像{@code this}一样用大括号括起来。
+           * @desc 块标签应始终从自己的行开始。
+           */
+          </CODE_SNIPPET>
+        </SUBSECTION>
+
+        <SUBSECTION title="JSDoc缩进">
+          <p>如果必须换行块标签，应将其视为断开代码语句并缩进四个空格。</p>
+
+          <CODE_SNIPPET>
+            /**
+             * 说明长参数/返回值描述的换行。
+             * @param {string} foo 这是一个参数，其描述太长无法在一行中容纳。
+             *     一行。
+             * @return {number} 这返回一些东西，其描述太长无法在一行中容纳。
+             *     一行。
+             */
+            project.MyClass.prototype.method = function(foo) {
+              return 5;
+            };
+          </CODE_SNIPPET>
+
+          <p>您不应缩进<code>@fileoverview</code>命令。您不必缩进<code>@desc</code>命令。</p>
+
+          <p>尽管这不是首选，但对齐描述也是可以接受的。</p>
+
+          <CODE_SNIPPET>
+            /**
+             * 这不是首选的缩进方法。
+             * @param {string} foo 这是一个参数，其描述太长无法在一行中容纳。
+             *                     一行。
+             * @return {number} 这返回一些东西，其描述太长无法在一行中容纳。
+             *                  一行。
+             */
+            project.MyClass.prototype.method = function(foo) {
+              return 5;
+            };
+          </CODE_SNIPPET>
+        </SUBSECTION>
+      </BODY>
+    </STYLEPOINT>
+```
+<SUBSECTION title="HTML in JSDoc">
+          <p>像JavaDoc一样，JSDoc支持许多HTML标签，如&lt;code&gt;,
+            &lt;pre&gt;, &lt;tt&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;ol&gt;,
+            &lt;li&gt;, &lt;a&gt;等其他标签。</p>
+
+          <p>这意味着纯文本格式不会被识别。因此，不要依赖空白来格式化JSDoc：</p>
+
+          <BAD_CODE_SNIPPET>
+            /**
+             * Computes weight based on three factors:
+             *   items sent
+             *   items received
+             *   last timestamp
+             */
+          </BAD_CODE_SNIPPET>
+
+          <p>结果会像这样：</p>
+
+          <BAD_CODE_SNIPPET>
+          Computes weight based on three factors: items sent items received last timestamp
+          </BAD_CODE_SNIPPET>
+
+          <p>相反，应该这样做：</p>
+
+          <CODE_SNIPPET>
+            /**
+             * Computes weight based on three factors:
+             * &lt;ul&gt;
+             * &lt;li&gt;items sent
+             * &lt;li&gt;items received
+             * &lt;li&gt;last timestamp
+             * &lt;/ul&gt;
+             */
+          </CODE_SNIPPET>
+
+          The <a href="https://www.oracle.com/technetwork/java/javase/documentation/index-137868.html">
+          JavaDoc</a> 风格指南是关于如何编写格式良好的文档注释的有用资源。
+        </SUBSECTION>
+
+        <SUBSECTION title="Top/File-Level Comments">
+          <p>
+
+            <a href="copyright.html">版权声明</a>和作者信息是可选的。
+            通常建议在文件包含多个类定义时提供文件概述。顶级注释旨在帮助不熟悉代码的读者了解文件内容。
+            如果存在，应提供文件内容的描述以及任何依赖或兼容性信息。例如：
+          </p>
+
+          <CODE_SNIPPET>
+            /**
+             * @fileoverview 文件的描述、用途及其依赖信息。
+             */
+          </CODE_SNIPPET>
+
+
+        </SUBSECTION>
+
+        <SUBSECTION title="Class Comments">
+          <p>类必须用描述和<a href="#constructor-tag">标识构造函数的类型标签</a>进行文档化。
+          </p>
+
+          <CODE_SNIPPET>
+            /**
+             * 使某些事情变得有趣且简单的类。
+             * @param {string} arg1 使这更有趣的参数。
+             * @param {Array.&lt;number&gt;} arg2 要处理的数字列表。
+             * @constructor
+             * @extends {goog.Disposable}
+             */
+            project.MyClass = function(arg1, arg2) {
+              // ...
+            };
+            goog.inherits(project.MyClass, goog.Disposable);
+          </CODE_SNIPPET>
+        </SUBSECTION>
+
+        <SUBSECTION title="Method and Function Comments">
+          <p>应记录参数和返回类型。如果方法描述从参数或返回类型描述中显然可以省略。方法描述应以第三人称陈述句开始。</p>
+          <CODE_SNIPPET>
+            /**
+             * 对MyClass的一个实例进行操作并返回某些东西。
+             * @param {project.MyClass} obj MyClass的实例，导致需要换行的长注释。
+             * @return {boolean} 是否发生了某些事情。
+             */
+            function PR_someMethod(obj) {
+              // ...
+            }
+          </CODE_SNIPPET>
+        </SUBSECTION>
+```xml
+        <SUBSECTION title="属性注释">
+          <CODE_SNIPPET>
+            /** @constructor */
+            project.MyClass = function() {
+              /**
+               * 每窗格的最大事物数量。
+               * @type {number}
+               */
+              this.someProperty = 4;
+            }
+          </CODE_SNIPPET>
+        </SUBSECTION>
+
+        <SUBSECTION title="JSDoc标签参考">
+          <a name="JSDoc_Tag_Reference"/>
+          <p/>
+          <table border="1" style="border-collapse:collapse" cellpadding="4">
+            <thead>
+              <tr>
+                <th>标签</th>
+                <th>模板 &amp; 示例</th>
+                <th>描述</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a name="tag-author">@author</a>
+
+                </td>
+                <td>
+                  <code>@author username@google.com (first last)</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @fileoverview 处理文本区域的实用工具。
+                     * @author kuth@google.com (Uthur Pendragon)
+                     */
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  记录文件的作者或测试的所有者，通常仅在<code>@fileoverview</code>注释中使用。
+
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-code">@code</a></td>
+                <td>
+                  <code>{@code ...}</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 移动到选择中的下一个位置。
+                     * 当超过范围末尾时抛出{@code goog.iter.StopIteration}。
+                     * @return {Node} 下一个位置的节点。
+                     */
+                    goog.dom.RangeIterator.prototype.next = function() {
+                      // ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  指示JSDoc描述中的术语是代码，以便在生成的文档中正确格式化。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-const">@const</a></td>
+                <td>
+                  <code>@const</code><br/>
+                  <code>@const {type}</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @const */ var MY_BEER = 'stout';
+
+                    /**
+                     * 我的命名空间最喜欢的啤酒种类。
+                     * @const {string}
+                     */
+                    mynamespace.MY_BEER = 'stout';
+
+                    /** @const */ MyClass.MY_BEER = 'stout';
+
+                    /**
+                     * 初始化请求。
+                     * @const
+                     */
+                    mynamespace.Request.prototype.initialize = function() {
+                      // 此方法不能在子类中被覆盖。
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <p>标记变量（或属性）为只读并适合内联。</p>
+
+                  <p><code>@const</code>变量是对值的不可变指针。如果标记为<code>@const</code>的变量或属性被覆盖，JSCompiler将发出警告。</p>
+
+                  <p>常量值的类型声明可以省略，如果可以清楚地推断出来。关于变量的额外注释是可选的。</p>
+
+                  <p>当<code>@const</code>应用于方法时，意味着该方法不仅不可被覆盖，而且还被<em>最终化</em>——在子类中不可被重写。</p>
+
+                  <p>关于<code>@const</code>的更多信息，请参见<a href="#Constants">常量</a>部分。</p>
+
+                </td>
+              </tr>
+```
+<tr>
+                <td><a name="tag-constructor">@constructor</a></td>
+                <td>
+                  <code>@constructor</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 一个矩形。
+                     * @constructor
+                     */
+                    function GM_Rect() {
+                      ...
+                    }
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  在类的文档中使用，以指示构造函数。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-define">@define</a></td>
+                <td>
+                  <code>@define {Type} description</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @define {boolean} */
+                    var TR_FLAGS_ENABLE_DEBUG = true;
+
+                    /**
+                     * @define {boolean} 是否在编译时已知浏览器是IE。
+                     */
+                    goog.userAgent.ASSUME_IE = false;
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  表示一个可以在编译时被编译器覆盖的常量。在示例中，编译器标志
+                  <code>--define='goog.userAgent.ASSUME_IE=true'</code>
+                  可以在BUILD文件中指定，以指示常量
+                  <code>goog.userAgent.ASSUME_IE</code> 应被替换为
+                  <code>true</code>。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-deprecated">@deprecated</a></td>
+                <td>
+                  <code>@deprecated Description</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 确定一个节点是否为字段。
+                     * @return {boolean} 如果元素的内容可编辑，但元素本身不可编辑，则返回true。
+                     * @deprecated 使用isField()。
+                     */
+                    BN_EditUtil.isTopEditableField = function(node) {
+                      // ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  用于告知一个函数、方法或属性不应再使用。始终提供关于调用者应使用什么替代的说明。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-dict">@dict</a></td>
+                <td>
+                  <code>@dict Description</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @constructor
+                     * @dict
+                     */
+                    function Foo(x) {
+                      this['x'] = x;
+                    }
+                    var obj = new Foo(123);
+                    var num = obj.x;  // 警告
+
+                    (/** @dict */ { x: 1 }).x = 123;  // 警告
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  当一个构造函数（示例中的<code>Foo</code>）被标注为<code>@dict</code>时，只能使用括号表示法来访问<code>Foo</code>对象的属性。
+                  该标注也可以直接用于对象字面量上。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-enum">@enum</a></td>
+                <td>
+                  <code>@enum {Type}</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 三态值的枚举。
+                     * @enum {number}
+                     */
+                    project.TriState = {
+                      TRUE: 1,
+                      FALSE: -1,
+                      MAYBE: 0
+                    };
+                  </CODE_SNIPPET>
+                </td>
+              </tr>
+<tr>
+                <td><a name="tag-export">@export</a></td>
+                <td>
+                  <code>@export</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @export */
+                    foo.MyPublicClass.prototype.myPublicMethod = function() {
+                      // ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <p>给定左侧的代码，当编译器使用
+                  <code>--generate_exports</code>标志运行时，它将生成以下代码：</p>
+                  <CODE_SNIPPET>
+                    goog.exportSymbol('foo.MyPublicClass.prototype.myPublicMethod',
+                        foo.MyPublicClass.prototype.myPublicMethod);
+                  </CODE_SNIPPET>
+                  <p>这将导出符号到未编译的代码中。
+                  使用<code>@export</code>注解的代码必须要么</p>
+                  <ol>
+                    <li>包含<code>//javascript/closure/base.js</code>，或者</li>
+                    <li>在自己的代码库中定义<code>goog.exportSymbol</code>和
+                      <code>goog.exportProperty</code>，并使用相同的方法签名。</li>
+                  </ol>
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-expose">@expose</a></td>
+                <td>
+                  <code>@expose</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @expose */
+                    MyClass.prototype.exposedProperty = 3;
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <p>
+                    声明一个暴露的属性。暴露的属性不会被编译器以任何方式移除、重命名、折叠或优化。具有相同名称的任何属性也无法被优化。
+                  </p>
+
+                  <p>
+                    <code>@expose</code>永远不应在库代码中使用，因为它会阻止该属性被移除。
+                  </p>
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-extends">@extends</a></td>
+                <td>
+                  <code>
+                    @extends Type<br/>
+                    @extends {Type}
+                  </code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 不可变的空节点列表。
+                     * @constructor
+                     * @extends goog.ds.BasicNodeList
+                     */
+                    goog.ds.EmptyNodeList = function() {
+                      ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  与<code>@constructor</code>一起使用，表示一个类从另一个类继承。类型周围的大括号是可选的。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-externs">@externs</a></td>
+                <td>
+                  <code>@externs</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @fileoverview 这是一个外部文件。
+                     * @externs
+                     */
+
+                    var document;
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  <p>
+                    声明一个
+
+                    外部文件。
+                  </p>
+
+
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-fileoverview">@fileoverview</a></td>
+                <td>
+                  <code>@fileoverview 描述</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @fileoverview 用于执行需要此长但不缩进的注释的操作的实用工具。
+                     * @author kuth@google.com (Uthur Pendragon)
+                     */
+                  </CODE_SNIPPET>
+                </td>
+                <td>使注释块提供文件级信息。</td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-implements">@implements</a></td>
+                <td>
+                  <code>
+                    @implements Type<br/>
+                    @implements {Type}
+                  </code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 一个形状。
+                     * @interface
+                     */
+                    function Shape() {};
+                    Shape.prototype.draw = function() {};
+<tr>
+  <td>
+    <CODE_SNIPPET>
+      /**
+       * @constructor
+       * @implements {Shape}
+       */
+      function Square() {};
+      Square.prototype.draw = function() {
+        ...
+      };
+    </CODE_SNIPPET>
+  </td>
+  <td>
+    与<code>@constructor</code>一起使用，表示一个类实现了一个接口。类型周围的大括号是可选的。
+  </td>
+</tr>
+
+<tr>
+  <td><a name="tag-inheritDoc">@inheritDoc</a></td>
+  <td>
+    <code>@inheritDoc</code>
+    <p><i>例如：</i></p>
+    <CODE_SNIPPET>
+      /** @inheritDoc */
+      project.SubClass.prototype.toString() {
+        // ...
+      };
+    </CODE_SNIPPET>
+  </td>
+  <td>
+    <p style="font-weight:bold">已废弃。请使用<code>@override</code>代替。</p>
+
+    表示子类的方法或属性有意隐藏超类的方法或属性，并且具有完全相同的文档。请注意，<code>@inheritDoc</code>暗示了<code>@override</code>。
+  </td>
+</tr>
+
+<tr>
+  <td><a name="tag-interface">@interface</a></td>
+  <td>
+    <code>@interface</code>
+    <p><i>例如：</i></p>
+    <CODE_SNIPPET>
+      /**
+       * 一个形状。
+       * @interface
+       */
+      function Shape() {};
+      Shape.prototype.draw = function() {};
+
+      /**
+       * 一个多边形。
+       * @interface
+       * @extends {Shape}
+       */
+      function Polygon() {};
+      Polygon.prototype.getSides = function() {};
+    </CODE_SNIPPET>
+  </td>
+  <td>
+    用于表示函数定义了一个接口。
+  </td>
+</tr>
+
+<tr>
+  <td><a name="tag-lends">@lends</a></td>
+  <td>
+    <code>@lends objectName</code><br/>
+    <code>@lends {objectName}</code>
+    <p><i>例如：</i></p>
+    <CODE_SNIPPET>
+      goog.object.extend(
+          Button.prototype,
+          /** @lends {Button.prototype} */ {
+            isButton: function() { return true; }
+          });
+    </CODE_SNIPPET>
+  </td>
+  <td>
+    表示对象字面量的键应被视为其他对象的属性。此注释应仅出现在对象字面量上。
+
+    请注意，大括号中的名称不是像其他注释中的类型名称。它是一个对象名称。它命名了属性被“借用”的对象。例如，<code>@type {Foo}</code>表示“Foo的一个实例”，但<code>@lends {Foo}</code>表示“构造函数Foo”。
+
+    <a href="https://code.google.com/p/jsdoc-toolkit/wiki/TagLends">JSDoc Toolkit文档</a>对此注释有更多信息。
+  </td>
+</tr>
+<tr>
+                <td><a name="tag-license">@license</a> 或
+                  <a name="tag-preserve">@preserve</a></td>
+                <td>
+                  <code>@license 描述</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @preserve Copyright 2009 SomeThirdParty.
+                     * Here is the full license text and copyright
+                     * notice for this file. Note that the notice can span several
+                     * lines and is only terminated by the closing star and slash:
+                     */
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  任何标记为 <code>@license</code> 或
+                  <code>@preserve</code> 的内容将被编译器保留，并
+                  在该文件编译后的代码顶部输出。此
+                  注释允许重要通知（如法律许可或
+                  版权文本）在编译后保持不变。换行符
+                  会被保留。
+                </td>
+              </tr>
+
+
+
+
+
+              <tr>
+                <td><a name="tag-noalias">@noalias</a></td>
+                <td>
+                  <code>@noalias</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @noalias */
+                    function Range() {}
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  在外部文件中使用，以指示编译器在编译器的别名外部传递过程中不应对
+                  变量或函数进行别名处理。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-nocompile">@nocompile</a></td>
+                <td>
+                  <code>@nocompile</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @nocompile */
+
+                    // JavaScript 代码
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  在文件顶部使用，以告知编译器解析此
+                  文件但不编译它。
+                  不用于编译的代码（如引导代码）应使用此
+                  注释，并应从编译测试中省略。
+                  谨慎使用。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-nosideeffects">@nosideeffects</a></td>
+                <td>
+                  <code>@nosideeffects</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @nosideeffects */
+                    function noSideEffectsFn1() {
+                      // ...
+                    }
+
+                    /** @nosideeffects */
+                    var noSideEffectsFn2 = function() {
+                      // ...
+                    };
+
+                    /** @nosideeffects */
+                    a.prototype.noSideEffectsFn3 = function() {
+                      // ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  此注释可用于函数和构造函数声明的一部分，以指示对
+                  声明的函数的调用没有副作用。此注释
+                  允许编译器在不使用返回值的情况下移除对这些函数的调用。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-override">@override</a></td>
+                <td>
+                  <code>@override</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @return {string} project.SubClass 的可读表示。
+                     * @override
+                     */
+                    project.SubClass.prototype.toString = function() {
+                      // ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  表示子类的方法或属性有意隐藏超类的方法或属性。如果
+                  没有包含其他文档，该方法或属性也将从其超类继承文档。
+                </td>
+              </tr>
+<tr>
+                <td><a name="tag-param">@param</a></td>
+                <td>
+                  <code>@param {Type} varname Description</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 查询Baz中的项目。
+                     * @param {number} groupNum 要查询的子组ID。
+                     * @param {string|number|null} term 项目名称，
+                     *     或项目ID，或null以搜索所有内容。
+                     */
+                    goog.Baz.prototype.query = function(groupNum, term) {
+                      // ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  用于方法、函数和构造函数调用，以记录函数的参数。<p/>
+
+                  <a href="#JsTypes">类型</a>
+                  名称必须用大括号括起来。如果省略类型，编译器将不会对参数进行类型检查。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-private">@private</a></td>
+                <td>
+                  <code>@private</code><br/>
+                  <code>@private {type}</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 监听此记录器的处理程序。
+                     * @private {!Array.&lt;Function&gt;}
+                     */
+                    this.handlers_ = [];
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  与方法或属性名称末尾的下划线一起使用，以指示该成员是
+                  <a href="#Visibility__private_and_protected_fields_">私有</a>且最终的。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-protected">@protected</a></td>
+                <td>
+                  <code>@protected</code><br/>
+                  <code>@protected {type}</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 将组件的根元素设置为给定的元素。
+                     * @param {Element} element 组件的根元素。
+                     * @protected
+                     */
+                    goog.ui.Component.prototype.setElementInternal = function(element) {
+                      // ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  用于指示成员或属性是
+                  <a href="#Visibility__private_and_protected_fields_">受保护的</a>。
+                  应与没有末尾下划线的名称一起使用。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-public">@public</a></td>
+                <td>
+                  <code>@public</code><br/>
+                  <code>@public {type}</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 是否在内部捕获/冒泡处理中取消事件。
+                     * @public {boolean}
+                     * @suppress {visibility} 强烈建议不要在包外引用此项。
+                     */
+                     goog.events.Event.prototype.propagationStopped_ = false;
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  用于指示成员或属性是公共的。变量和属性默认是公共的，因此这种注释很少需要。
+                  仅应在无法轻松更改以覆盖作为私有变量命名的成员的可见性的旧代码中使用。
+                </td>
+              </tr>
+<tr>
+                <td><a name="tag-return">@return</a></td>
+                <td>
+                  <code>@return {Type} Description</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @return {string} 最后一个项目的十六进制ID。
+                     */
+                    goog.Baz.prototype.getLastId = function() {
+                      // ...
+                      return id;
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  用于记录方法和函数调用的返回类型。编写布尔参数的描述时，优选使用“是否组件可见”而不是“如果组件可见则为真，否则为假”。如果没有返回值，请勿使用<code>@return</code>标签。<p/>
+
+                  <a href="#JsTypes">类型</a>
+                  名称必须用大括号括起来。如果省略类型，编译器将不会对返回值进行类型检查。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-see">@see</a></td>
+                <td>
+                  <code>@see Link</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 添加单个项目，鲁莽地。
+                     * @see #addSafely
+                     * @see goog.Collect
+                     * @see goog.RecklessAdder#add
+                     ...
+                  </CODE_SNIPPET>
+                </td>
+                <td>引用到另一个类函数或方法的查找。</td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-struct">@struct</a></td>
+                <td>
+                  <code>@struct Description</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @constructor
+                     * @struct
+                     */
+                    function Foo(x) {
+                      this.x = x;
+                    }
+                    var obj = new Foo(123);
+                    var num = obj['x'];  // 警告
+                    obj.y = "asdf";  // 警告
+
+                    Foo.prototype = /** @struct */ {
+                      method1: function() {}
+                    };
+                    Foo.prototype.method2 = function() {};  // 警告
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  当构造函数（示例中的<code>Foo</code>）被标注为<code>@struct</code>时，只能使用点表示法访问<code>Foo</code>对象的属性。此外，不能在<code>Foo</code>对象创建后添加新属性。该标注也可以直接用于对象字面量。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-supported">@supported</a></td>
+                <td>
+                  <code>@supported Description</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @fileoverview 事件管理器
+                     * 为浏览器的事件系统提供了一个抽象接口。
+                     * @supported 目前已在IE6和FF1.5中测试
+                     */
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  在文件概述中使用，以指示文件支持哪些浏览器。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-suppress">@suppress</a></td>
+                <td>
+                  <code>
+                    @suppress {warning1|warning2}
+                  </code>
+                  <code>
+                    @suppress {warning1,warning2}
+                  </code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @suppress {deprecated}
+                     */
+                    function f() {
+                      deprecatedVersionOfF();
+                    }
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  抑制工具的警告。警告类别由<code>|</code>或<code>,</code>分隔。
+
+                </td>
+              </tr>
+<tr>
+                <td><a name="tag-template">@template</a></td>
+                <td>
+                  <code>@template</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * @param {function(this:T, ...)} fn
+                     * @param {T} thisObj
+                     * @param {...*} var_args
+                     * @template T
+                     */
+                    goog.bind = function(fn, thisObj, var_args) {
+                       ...
+                    };
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  此注解可用于声明<a href="#Template_types">模板类型名称</a>。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-this">@this</a></td>
+                <td>
+                  <code>
+                    @this Type<br/>
+                    @this {Type}
+                  </code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    pinto.chat.RosterWidget.extern('getRosterElement',
+                    /**
+                     * 返回花名册小部件元素。
+                     * @this pinto.chat.RosterWidget
+                     * @return {Element}
+                     */
+                    function() {
+                      return this.getWrappedComponent_().getElement();
+                    });
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  特定方法调用上下文中对象的类型。当<code>this</code>关键字从非原型方法的函数中引用时，需要此类型。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-type">@type</a></td>
+                <td>
+                  <code>
+                    @type Type<br/>
+                    @type {Type}
+                  </code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /**
+                     * 消息的十六进制ID。
+                     * @type {string}
+                     */
+                    var hexId = hexId;
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  标识变量、属性或表达式的<a href="#JsTypes">类型</a>。大多数类型不需要大括号，但一些项目为了一致性要求对所有类型使用大括号。
+                </td>
+              </tr>
+
+              <tr>
+                <td><a name="tag-typedef">@typedef</a></td>
+                <td>
+                  <code>@typedef</code>
+                  <p><i>例如：</i></p>
+                  <CODE_SNIPPET>
+                    /** @typedef {(string|number)} */
+                    goog.NumberLike;
+
+                    /** @param {goog.NumberLike} x 一个数字或字符串。 */
+                    goog.readNumber = function(x) {
+                      ...
+                    }
+                  </CODE_SNIPPET>
+                </td>
+                <td>
+                  此注解可用于声明<a href="#Typedefs">复杂类型</a>的别名。
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+
+          <p>
+            您还可能在第三方代码中看到其他类型的JSDoc注解。这些注解出现在
+            <a href="https://code.google.com/p/jsdoc-toolkit/wiki/TagReference">
+              JSDoc Toolkit Tag Reference
+            </a>
+            中，但在Google代码中目前不鼓励使用。您应该将它们视为将来使用的“保留”名称。这些包括：
+            <ul>
+              <li>@augments</li>
+              <li>@argument</li>
+              <li>@borrows</li>
+              <li>@class</li>
+              <li>@constant</li>
+              <li>@constructs</li>
+              <li>@default</li>
+              <li>@event</li>
+              <li>@example</li>
+              <li>@field</li>
+              <li>@function</li>
+              <li>@ignore</li>
+              <li>@inner</li>
+              <li>@link</li>
+              <li>@memberOf</li>
+              <li>@name</li>
+              <li>@namespace</li>
+              <li>@property</li>
+              <li>@public</li>
+              <li>@requires</li>
+              <li>@returns</li>
+              <li>@since</li>
+              <li>@static</li>
+              <li>@version</li>
+            </ul>
+          </p>
+        </SUBSECTION>
+      </BODY>
+    </STYLEPOINT>
+<STYLEPOINT title="Providing Dependencies With goog.provide">
+      <SUMMARY>
+        仅提供顶级符号。
+      </SUMMARY>
+      <BODY>
+        <p>
+          类中定义的所有成员应位于同一文件中。因此，在包含同一类中定义的多个成员（例如枚举、内部类等）的文件中，仅应提供顶级类。
+        </p>
+        <p>这样做：</p>
+        <CODE_SNIPPET>
+          goog.provide('namespace.MyClass');
+        </CODE_SNIPPET>
+        <p>不要这样做：</p>
+        <BAD_CODE_SNIPPET>
+          goog.provide('namespace.MyClass');
+          goog.provide('namespace.MyClass.Enum');
+          goog.provide('namespace.MyClass.InnerClass');
+          goog.provide('namespace.MyClass.TypeDef');
+          goog.provide('namespace.MyClass.CONSTANT');
+          goog.provide('namespace.MyClass.staticMethod');
+        </BAD_CODE_SNIPPET>
+        <p>
+          命名空间上的成员也可以提供：
+        </p>
+        <CODE_SNIPPET>
+          goog.provide('foo.bar');
+          goog.provide('foo.bar.method');
+          goog.provide('foo.bar.CONSTANT');
+        </CODE_SNIPPET>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="Compiling">
+      <SUMMARY>必需</SUMMARY>
+      <BODY>
+
+
+        <p>所有面向客户的代码都必须使用像
+          <a href="https://code.google.com/closure/compiler/">Closure Compiler</a>
+          这样的JS编译器。</p>
+
+
+
+
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="Tips and Tricks">
+      <SUMMARY>JavaScript小技巧</SUMMARY>
+      <BODY>
+        <SUBSECTION title="True and False Boolean Expressions">
+          <p>在布尔表达式中，以下都是false：</p>
+          <ul>
+            <li><code>null</code></li>
+            <li><code>undefined</code></li>
+            <li><code>''</code> 空字符串</li>
+            <li><code>0</code> 数字</li>
+          </ul>
+          <p>但要小心，因为这些都是true：</p>
+          <ul>
+            <li><code>'0'</code> 字符串</li>
+            <li><code>[]</code> 空数组</li>
+            <li><code>{}</code> 空对象</li>
+          </ul>
+
+          <p>这意味着与其这样做：</p>
+          <BAD_CODE_SNIPPET>
+            while (x != null) {
+          </BAD_CODE_SNIPPET>
+          <p>你可以写更简短的代码（只要你不期望x为0，或空字符串，或false）：</p>
+          <CODE_SNIPPET>
+            while (x) {
+          </CODE_SNIPPET>
+
+          <p>如果你想检查一个字符串是否为null或空，你可以这样做：</p>
+          <BAD_CODE_SNIPPET>
+            if (y != null &amp;&amp; y != '') {
+          </BAD_CODE_SNIPPET>
+          <p>但这样做更简短也更优雅：</p>
+          <CODE_SNIPPET>
+            if (y) {
+          </CODE_SNIPPET>
+<p><strong>注意:</strong> 关于布尔表达式，有许多非直观的事情。以下是一些例子:</p>
+          <ul>
+            <li><code>
+              Boolean('0') == true<br/>
+              '0' != true</code></li>
+            <li><code>
+              0 != null<br/>
+              0 == []<br/>
+              0 == false</code></li>
+            <li><code>
+              Boolean(null) == false<br/>
+              null != true<br/>
+              null != false</code></li>
+            <li><code>
+              Boolean(undefined) == false<br/>
+              undefined != true<br/>
+              undefined != false</code></li>
+            <li><code>
+              Boolean([]) == true<br/>
+              [] != true<br/>
+              [] == false</code></li>
+            <li><code>
+              Boolean({}) == true<br/>
+              {} != true<br/>
+              {} != false</code></li>
+          </ul>
+        </SUBSECTION>
+
+        <SUBSECTION title="条件（三元）运算符 (?:)">
+          <p>而不是这样写:</p>
+          <CODE_SNIPPET>
+            if (val) {
+              return foo();
+            } else {
+              return bar();
+            }
+          </CODE_SNIPPET>
+          <p>你可以这样写:</p>
+          <CODE_SNIPPET>
+            return val ? foo() : bar();
+          </CODE_SNIPPET>
+
+          <p>三元条件运算符在生成HTML时也很有用:</p>
+          <CODE_SNIPPET>
+            var html = '&lt;input type="checkbox"' +
+                (isChecked ? ' checked' : '') +
+                (isEnabled ? '' : ' disabled') +
+                ' name="foo"&gt;';
+          </CODE_SNIPPET>
+        </SUBSECTION>
+
+        <SUBSECTION title="&amp;&amp; 和 ||">
+          <p>这些二元布尔运算符是短路的，并且会评估为最后一个评估的项。</p>
+
+          <p>"||" 被称为“默认”运算符，因为你可以这样写:</p>
+          <BAD_CODE_SNIPPET>
+            /** @param {*=} opt_win */
+            function foo(opt_win) {
+              var win;
+              if (opt_win) {
+                win = opt_win;
+              } else {
+                win = window;
+              }
+              // ...
+            }
+          </BAD_CODE_SNIPPET>
+          <p>而不是这样写:</p>
+          <CODE_SNIPPET>
+            /** @param {*=} opt_win */
+            function foo(opt_win) {
+              var win = opt_win || window;
+              // ...
+            }
+          </CODE_SNIPPET>
+
+          <p>"&amp;&amp;" 也很有用，可以简化代码。例如，而不是这样写:</p>
+          <BAD_CODE_SNIPPET>
+            if (node) {
+              if (node.kids) {
+                if (node.kids[index]) {
+                  foo(node.kids[index]);
+                }
+              }
+            }
+          </BAD_CODE_SNIPPET>
+
+          <p>你可以这样做:</p>
+          <CODE_SNIPPET>
+            if (node &amp;&amp; node.kids &amp;&amp; node.kids[index]) {
+              foo(node.kids[index]);
+            }
+          </CODE_SNIPPET>
+
+          <p>或者这样:</p>
+          <CODE_SNIPPET>
+            var kid = node &amp;&amp; node.kids &amp;&amp; node.kids[index];
+            if (kid) {
+              foo(kid);
+            }
+          </CODE_SNIPPET>
+
+          <p>然而，这样做就有点过头了:</p>
+          <BAD_CODE_SNIPPET>
+            node &amp;&amp; node.kids &amp;&amp; node.kids[index] &amp;&amp; foo(node.kids[index]);
+          </BAD_CODE_SNIPPET>
+        </SUBSECTION>
+<SUBSECTION title="Iterating over Node Lists">
+          <p>节点列表通常作为带有过滤器的节点迭代器实现。
+            这意味着获取像length这样的属性是O(n)的，
+            通过重新检查长度来遍历列表将是O(n^2)的。</p>
+          <BAD_CODE_SNIPPET>
+            var paragraphs = document.getElementsByTagName('p');
+            for (var i = 0; i &lt; paragraphs.length; i++) {
+              doSomething(paragraphs[i]);
+            }
+          </BAD_CODE_SNIPPET>
+
+          <p>最好这样做：</p>
+          <CODE_SNIPPET>
+            var paragraphs = document.getElementsByTagName('p');
+            for (var i = 0, paragraph; paragraph = paragraphs[i]; i++) {
+              doSomething(paragraph);
+            }
+          </CODE_SNIPPET>
+
+          <p>只要数组不包含被视为布尔假的值，这种方法对所有集合和数组都适用。</p>
+
+          <p>在遍历childNodes的情况下，您还可以使用firstChild和nextSibling属性。</p>
+          <CODE_SNIPPET>
+            var parentNode = document.getElementById('foo');
+            for (var child = parentNode.firstChild; child; child = child.nextSibling) {
+              doSomething(child);
+            }
+          </CODE_SNIPPET>
+        </SUBSECTION>
+      </BODY>
+    </STYLEPOINT>
+  </CATEGORY>
+
+  <PARTING_WORDS>
+    <p>
+      <em>保持一致</em>。
+    </p>
+
+    <p>
+      如果您在编辑代码，请花几分钟时间查看周围的代码并确定其风格。如果他们在所有算术运算符周围使用空格，您也应该这样做。如果他们的注释周围有小方框的哈希标记，您的注释也应该有小方框的哈希标记。
+    </p>
+
+    <p>
+      制定风格指南的目的是拥有一个共同的编码词汇表，让人们可以专注于您在说什么，而不是您如何表达。我们在这里提出全局风格规则，以便人们了解词汇表，但本地风格也很重要。如果您添加到文件中的代码与周围现有代码看起来大不相同，当读者去阅读时，它会打乱他们的节奏。避免这种情况。
+    </p>
+
+  </PARTING_WORDS>
+
+  <p align="right">
+    修订版 2.93
+  </p>
+
+  <address>
+    Aaron Whyte<br/>
+    Bob Jervis<br/>
+    Dan Pupius<br/>
+    Erik Arvidsson<br/>
+    Fritz Schneider<br/>
+    Robby Walker<br/>
+  </address>
+</GUIDE>

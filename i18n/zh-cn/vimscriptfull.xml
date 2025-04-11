@@ -1,0 +1,1297 @@
+<?xml version = '1.0'?>
+<?xml-stylesheet type="text/xsl" href="styleguide.xsl"?>
+<GUIDE title="Google Vimscript Guide">
+  <p class="revision">
+
+    修订版 1.1
+  </p>
+
+  
+  <address>
+    Nate Soares<br/>
+    Artemis Sparks<br/>
+    David Barnett<br/>
+  </address>
+
+  <OVERVIEW>
+    <CATEGORY title="Background">
+      <p>
+        这是深入的vimscript指南。如果您只是一个想要编写插件的普通用户，
+        <a href="vimscriptguide.html">简化版风格指南</a>适合您。
+      </p>
+      <p>
+        这份相当详尽的指南深入探讨了理由和澄清。它提供了一套理想化的规则，
+        这些规则对于普通脚本编写者来说可能过于严格。
+      </p>
+      
+      <p>
+        它适用于那些想了解简化指南中某些决定的原因，并希望学习一些关于安全使用
+        vimscript的知识的用户。
+      </p>
+      <p>
+        公平警告：Vimscript是一个令人发狂的深渊。当你凝视它时，它也在凝视你。请谨慎前行。
+      </p>
+    </CATEGORY>
+  </OVERVIEW>
+<CATEGORY title="Portability">
+    <p>
+      Vim 高度可配置。用户可以更改许多默认设置，包括大小写敏感性、正则表达式规则、替换规则等。为了使您的 vimscript 对所有用户都有效，请遵循以下指导原则：
+    </p>
+    <ul>
+      <li>
+        始终在正则表达式前加上 <code>\m</code>、<code>\v</code>、<code>\M</code> 或 <code>\V</code> 之一（优先简洁）
+        <ul>
+          <li>
+            用户可以更改正则表达式的全局“魔法级别”。这会改变正则表达式中原子的解析方式，包括 <code>.</code>、<code>*</code> 和 <code>{</code>。
+          </li>
+          <li>
+            即使您的正则表达式不包含受 <code>magic</code> 设置影响的字符，您也必须在其前加上魔法控制原子。这可以使您的正则表达式在其他开发者修改并忘记添加控制原子时仍然有效。
+          </li>
+          <li>
+            如果您对使用哪种类型的正则表达式没有意见，优先选择使您的正则表达式最简洁的类型。
+          </li>
+        </ul>
+      </li>
+      <li>
+        在脚本中避免使用 <code>:s[ubstitute]</code>。
+        <ul>
+          <li>
+            <code>:substitute</code> 会移动光标。
+          </li>
+          <li>
+            当匹配不存在时，<code>:substitute</code> 会输出错误消息。
+          </li>
+          <li>
+            <code>g</code> 标志的含义取决于 <code>gdefault</code> 设置。如果您确实使用 <code>:substitute</code>，您必须保存 <code>gdefault</code>，将其设置为 <code>0</code> 或 <code>1</code>，执行替换，然后恢复它。
+          </li>
+          <li>
+            希望安全替换缓冲区中文本的脚本作者应使用 <code>maktaba#buffer#Replace</code>。
+          </li>
+        </ul>
+      </li>
+      <li>
+        始终对字符串使用明确大小写的操作符（<code>=~#</code> 和 <code>=~?</code>，而不是 <code>=~</code>）。
+        <ul>
+          <li>
+            这也适用于 <code>!~ == != &gt; &gt;= &lt;</code> 和 <code>&lt;=</code>
+          </li>
+          <li>
+            这仅适用于字符串。对于数字，<code>==</code> 和 <code>&gt;=</code> 可以，但对于字符串必须使用 <code>==#</code> 和 <code>&gt;=#</code>。
+          </li>
+          <li>
+            <code>=~</code> 及其相关操作符的行为取决于 <code>ignorecase</code> 设置。
+          </li>
+          <li>
+            当您明确希望遵循用户的 <code>ignorecase</code> 设置时，您可以打破此规则。请准备好证明您的理由。
+          </li>
+        </ul>
+      </li>
+      <li>
+        在将正则表达式用作函数参数时，在它们前面加上 <code>\c</code> 或 <code>\C</code>。
+        <ul>
+          <li>
+            这会强制大小写明确匹配或忽略。
+          </li>
+          <li>
+            当使用指定大小写敏感性的操作符（如 <code>=~#</code> 等）比较正则表达式时，建议但不要求这样做。
+          </li>
+          <li>
+            此规则适用于您的正则表达式匹配语法、外部 API、外部消息以及大多数其他情况。
+          </li>
+          <li>
+            它不适用于匹配缓冲区中的文本。当匹配缓冲区中的文本时，您应该遵循 <code>ignorecase</code> 设置。
+          </li>
+          <li>
+            任何时候您明确希望遵循 <code>ignorecase</code> 设置时，您也可以忽略此规则。请准备好证明您的理由。
+          </li>
+        </ul>
+</li>
+      <li>
+        始终使用 <code>normal!</code> 而不是 <code>normal</code>。
+        <ul>
+          <li>
+            如果你省略了 <code>!</code>，命令将使用用户的键映射，你完全不知道你的宏会做什么。
+          </li>
+        </ul>
+      </li>
+      <li>
+        始终使用 <code>noremap</code> 系列命令。
+        <ul>
+          <li>
+            你的插件通常不应该引入映射，但如果它们确实做了，<code>map</code> 命令会尊重用户现有的映射，并且可能会做任何事情。
+          </li>
+        </ul>
+      </li>
+      <li>
+        使用 <code>catch</code> 时，匹配错误代码而不是错误文本。
+        <ul>
+          <li>
+            错误文本可能依赖于本地化。
+          </li>
+          <li>
+            参见 <code>:help error-messages</code>。
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <p>
+      一般来说，保护所有命令和函数免受用户设置的影响。
+    </p>
+    
+  </CATEGORY>
+  <CATEGORY title="语言指南">
+    <ul>
+      
+      
+      <li>
+        行继续：<strong>是</strong>
+        <ul>
+<li>
+            支持vi兼容模式的插件必须保存并恢复兼容选项，如<strong>勘误部分</strong>所述，以便行继续工作正常。
+          </li>
+        </ul>
+      </li>
+      <li>
+        异常：<strong>是的，但要谨慎</strong>
+        <ul>
+          <li>
+            在抛出的异常消息中始终使用错误代码。
+          </li>
+          <li>
+            优先使用<code>maktaba#error</code>中的代码，位于<code>maktaba</code>中。
+          </li>
+          <li>
+            回退到vim错误代码。参见<code>:help error-messages</code>。
+          </li>
+          <li>
+            使用<code>maktaba#error#Message</code>生成自定义错误消息。
+          </li>
+        </ul>
+      </li>
+      <li>
+        全局变量：<strong>仅作为配置</strong>
+        <ul>
+          <li>
+            参见插件指南。
+          </li>
+        </ul>
+      </li>
+      <li>
+        消息传递：<strong>尽可能少</strong>
+        <ul>
+          <li>
+            吵闹的脚本令人厌烦。
+          </li>
+          <li>
+            当发生错误时，向用户发送消息。
+          </li>
+          <li>
+            当开始执行耗时操作时，向用户发送消息。
+          </li>
+          <li>
+            否则避免发送消息。
+          </li>
+        </ul>
+      </li>
+      <li>
+        类型检查：
+        <strong>尽可能使用严格和明确的检查</strong>
+        <ul>
+          <li>
+            Vimscript在处理某些类型时具有不安全的、非直观的行为。例如，<code>0 == 'foo'</code>会评估为真。
+          </li>
+          <li>
+            尽可能使用严格的比较运算符。当与字符串字面量比较时，使用<code>is#</code>运算符。否则，优先使用<code>maktaba#value#IsEqual</code>或明确检查<code>type()</code>。
+          </li>
+          <li>
+            在使用变量之前明确检查其类型。使用<code>maktaba#ensure</code>中的函数，或检查<code>maktaba#value</code>或<code>type()</code>并抛出自己的错误。
+          </li>
+          <li>
+            对可能改变类型的变量，特别是那些在循环中赋值的变量，使用<code>:unlet</code>。
+          </li>
+        </ul>
+      </li>
+      <li>
+        FuncRefs：<strong>大多数情况下不使用</strong>
+        <ul>
+          <li>
+            FuncRefs具有不一致的命名限制强制执行。（函数可以有FuncRefs不允许的名称。）
+          </li>
+          <li>
+            FuncRefs重新赋值的能力不一致（在Vim 7.2及之前版本中，必须在赋值前取消FuncRef）。
+          </li>
+          <li>
+            在大多数需要FuncRef的实例中，字符串同样有效：只需传递用于创建FuncRef的字符串。
+          </li>
+          <li>
+            考虑使用<code>maktaba#function</code>来创建和操作函数句柄。
+          </li>
+        </ul>
+      </li>
+      <li>
+        Python：<strong>谨慎使用</strong>
+        <ul>
+<li>
+            由于嵌入在Python插件中的Python代码难以在插件之间共享，因此会影响代码重用。
+          </li>
+          <li>
+            使用Python会引入Python语言版本依赖，这些依赖可能会过时。
+          </li>
+          <li>
+            例外：对于需要在后台执行工作的插件功能，使用Python是合理的，因为Vimscript无法做到这一点。
+          </li>
+        </ul>
+      </li>
+      <li>
+        Ruby: <strong>否</strong>
+        <ul>
+          <li>
+            我们不能假设Ruby的互操作性。
+          </li>
+          <li>
+            你不应该依赖用户安装的Ruby语言版本。
+          </li>
+        </ul>
+      </li>
+      <li>
+        Lua: <strong>否</strong>
+        <ul>
+          <li>
+            出于与Ruby相同的原因。
+          </li>
+        </ul>
+      </li>
+      <li>
+        字典函数: <strong>鼓励</strong>
+        <ul>
+          <li>
+            Vimscript可以将函数附加到字典上。这些函数可以访问<code>self</code>参数，从而访问字典状态。
+          </li>
+          <li>
+            在你会使用Python类的地方使用这些函数。
+          </li>
+          <li>
+            不要过度使用此功能；对于辅助函数或API函数来说，这不是必要的，仅适用于封装对象。
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <p>
+      所有其他语言功能都可以使用。
+    </p>
+  </CATEGORY>
+  <CATEGORY title="结构">
+    <ul>
+      <li>
+        提供的功能应打包成模块化的插件。
+        <ul>
+          <li>
+            你的插件中的每个函数都应特定于你的插件。
+          </li>
+          <li>
+            通用实用函数应抽象到库插件中。
+          </li>
+          <li>
+            使用<code>maktaba</code>管理依赖。
+          </li>
+        </ul>
+      </li>
+      <li>
+        <code>plugin-names-like-this</code>
+        <ul>
+          <li>
+            插件名称应具有描述性且简洁。
+          </li>
+          
+</ul>
+      </li>
+      <li>
+        每个插件必须由一个目录（或代码仓库）组成，与插件同名（如有需要，可以加上“vim-”前缀或“.vim”后缀）。
+      </li>
+      <li>
+        插件元数据应使用addon-info.json格式声明（详细信息请参见<a href="https://github.com/MarcWeber/vim-addon-manager/blob/master/doc/vim-addon-manager-additional-documentation.txt">VAM文档</a>）。
+      </li>
+      <li>
+        函数应放在插件的<code>autoload/</code>子目录中。
+        <ul>
+          <li>
+            这允许它们延迟加载，从而加快启动时间。
+          </li>
+          <li>
+            这有助于vim强制执行命名空间约定。
+          </li>
+        </ul>
+      </li>
+      <li>
+        <code>plugin/</code>或<code>instant/</code>目录中的每个文件应以以下样板开始
+        <CODE_SNIPPET>
+          let [s:plugin, s:enter] = maktaba#plugin#Enter(expand('&lt;sfile&gt;:p'))
+          if !s:enter
+            finish
+          endif
+        </CODE_SNIPPET>
+        （这可以防止重复进入，并允许用户选择性地禁用功能。）
+      </li>
+      <li>
+        用户配置应通过<code>instant/flags.vim</code>中定义的插件标志进行。
+        <ul>
+          <li>
+            使用<code>call s:plugin.Flag('FLAGNAME', DEFAULT_VALUE)</code>定义标志。
+          </li>
+          <li>
+            用户可以使用<code>:Glaive</code>命令配置这些标志（参见<a href="https://github.com/google/glaive">glaive</a>）。
+          </li>
+        </ul>
+      </li>
+      <li>
+        命令、自动命令、映射和设置更改应在<code>plugin/</code>或<code>ftplugin/</code>子目录中进行。
+        <ul>
+          <li>
+            所有命令应在<code>plugin/commands.vim</code>或<code>ftplugin/</code>文件中定义。
+          </li>
+          <li>
+            自动命令应在<code>plugin/autocmds.vim</code>中定义，并在自动组内。
+          </li>
+          <li>
+            映射应在<code>plugin/mappings.vim</code>中定义，除非用户明确启用，否则将被禁用。
+          </li>
+          <li>
+            如果插件配置了任何标准vim设置，这些设置应在<code>plugin/settings.vim</code>或<code>instant/settings.vim</code>中配置。
+          </li>
+        </ul>
+      </li>
+      <li>
+        避免使用<code>after/</code>子目录。
+        <ul>
+          <li>
+            <code>after/</code>应保留给用户使用。
+          </li>
+          <li>
+            当插件使用<code>after/</code>时，用户很难添加自己的覆盖设置。
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <STYLEPOINT title="Libraries vs. Functionality">
+      <SUMMARY>
+        将提供库的插件与提供命令的插件分开。
+      </SUMMARY>
+      <BODY>
+        <p>
+          许多插件要么提供用户功能（命令、自动命令等），要么提供API（自动加载的函数），但不提供两者。这鼓励这种分离，因为它允许其他插件引入库，而不引入命令、设置更改和其他影响最终用户的插件功能。
+        </p>
+      </BODY>
+    </STYLEPOINT>
+<STYLEPOINT title="Configuration">
+  <SUMMARY>
+    不要覆盖用户设置。尽可能提供配置选项：这就是Vim的核心所在。
+  </SUMMARY>
+  <BODY>
+    <ul>
+      <li>
+        使用maktaba标志进行插件配置。用户可以使用<code>:Glaive</code>命令进行配置。
+        
+      </li>
+      <li>
+        在设置配置变量之前检查它们是否存在。
+        <CODE_SNIPPET>
+          if !exists('g:myplugin_option')
+            let g:myplugin_option = 1
+          endif
+        </CODE_SNIPPET>
+      </li>
+    </ul>
+  </BODY>
+</STYLEPOINT>
+</CATEGORY>
+<CATEGORY title="Style Guide">
+  <p>
+    遵循谷歌的广泛风格惯例。在不确定时，模仿谷歌Python风格。
+  </p>
+
+  
+
+  <STYLEPOINT title="Documentation">
+    <SUMMARY>
+      使用<a href="https://github.com/google/vimdoc">vimdoc</a>。
+    </SUMMARY>
+    <BODY>
+      <p>
+        提供由<a href="https://github.com/google/vimdoc">vimdoc</a>生成的帮助文件。在.vim文件中按照vimdoc标准编写文档，并在addon-info.json文件中包含“description”和“author”等字段（参见<a href="https://github.com/MarcWeber/vim-addon-manager/blob/master/doc/vim-addon-manager-additional-documentation.txt">VAM文档</a>）。
+      </p>
+    </BODY>
+  </STYLEPOINT>
+<STYLEPOINT title="Whitespace">
+  <SUMMARY>
+    遵循谷歌的通用约定。
+  </SUMMARY>
+  <BODY>
+    <ul>
+      <li>
+        使用两个空格进行缩进。
+      </li>
+      <li>
+        不要使用制表符。
+      </li>
+      <li>
+        在操作符周围使用空格，但命令的参数除外。
+        <ul>
+          <li>
+            在命令中使用操作符周围的空格通常是无效的语法。Vimscript 对这一点的执行不一致。为了安全起见，始终省略命令参数周围的空白。
+          </li>
+          <li>
+            <CODE_SNIPPET>
+              let s:variable = "concatenated " . "strings"
+              command -range=% MyCommand
+            </CODE_SNIPPET>
+            <BAD_CODE_SNIPPET>
+              let s:variable="concatenated "."strings"
+              command -range = % MyCommand
+            </BAD_CODE_SNIPPET>
+          </li>
+        </ul>
+      </li>
+      <li>
+        不要引入尾随空白。
+        <ul>
+          <li>
+            你不需要特意去删除它。
+          </li>
+        </ul>
+      </li>
+      <li>
+        将行限制在80列宽。
+      </li>
+      <li>
+        继续行缩进两个制表符（四个空格）。
+      </li>
+      <li>
+        不要浪费空白对齐相似命令的公共部分。这既难以维护又成本高。
+        <ul>
+          <li>
+            <CODE_SNIPPET>
+              command -bang MyCommand call myplugin#foo()
+              command MyCommand2 call myplugin#bar()
+            </CODE_SNIPPET>
+            <BAD_CODE_SNIPPET>
+              command -bang MyCommand  call myplugin#foo()
+              command       MyCommand2 call myplugin#bar()
+            </BAD_CODE_SNIPPET>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <SUBSECTION title="Line Continuations">
+      <ul start="7">
+        <li>
+          优先在语义边界上进行行继续。
+          <ul>
+            <li>
+              <CODE_SNIPPET>
+                command SomeLongCommand
+                    \ call some#function()
+              </CODE_SNIPPET>
+              <BAD_CODE_SNIPPET>
+                command SomeLongCommand call
+                    \ some#function()
+              </BAD_CODE_SNIPPET>
+            </li>
+            <li>
+              发挥你的最佳判断力。
+            </li>
+          </ul>
+        </li>
+        <li>
+          在表示行继续的反斜杠后放置一个空格。
+          <ul>
+            <li>
+              在继续多行命令时，可以根据需要用管道符代替这个空格，如下所示：
+              <CODE_SNIPPET>
+                autocommand BufEnter &lt;buffer&gt;
+                    \ if !empty(s:var)
+                    \|  call some#function()
+                    \|else
+                    \|  call some#function(s:var)
+                    \|endif
+              </CODE_SNIPPET>
+            </li>
+          </ul>
+        </li>
+        <li>
+          尽量避免继续多行命令。优先使用函数调用。
+        </li>
+      </ul>
+    </SUBSECTION>
+    <SUBSECTION title="Comments">
+      <ul>
+        <li>
+          在注释文本前的<code>"</code>后放置一个空格。
+          <ul>
+            <li>
+              <CODE_SNIPPET>
+                " 我是一行注释。
+                call call(s:my_function)
+              </CODE_SNIPPET>
+            </li>
+          </ul>
+        </li>
+        <li>
+          不要使用内联注释。
+          <ul>
+            <li>
+              有些命令将它们视为注释，而另一些则视为未闭合的引号。有许多边缘情况。很难做到正确且难以维护。
+            </li>
+            <li>
+              在你会使用内联注释的地方，在上面的行上放置一行注释。
+            </li>
+          </ul>
+        </li>
+        <li>
+          在注释中留空行时，在空行中包含引号。
+          <ul>
+            <li>
+              <CODE_SNIPPET>
+                " 我是一个连续的
+                "
+                " 注释块
+              </CODE_SNIPPET>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </SUBSECTION>
+  </BODY>
+</STYLEPOINT>
+<STYLEPOINT title="Variables">
+      <SUMMARY>
+        <p>
+          <code>plugin-names-like-this</code>,
+          <code>FunctionNamesLikeThis</code>,
+          <code>CommandNamesLikeThis</code>,
+          <code>augroup_names_like_this</code>,
+          <code>variable_names_like_this</code>.
+        </p>
+        <p>
+          为所有变量加上其作用域前缀。
+        </p>
+      </SUMMARY>
+      <BODY>
+        <ul>
+          <li>
+            <code>variable_names_like_this</code>
+            <ul>
+              <li>
+                FuncRef 变量被视为函数，应按函数命名。
+              </li>
+              <li>
+                这种（病态的）约定是由 vim 本身强制执行的。
+              </li>
+            </ul>
+          </li>
+          <li>
+            为全局变量加上 <code>g:</code> 前缀
+            <ul>
+              <li>
+                Vimscript 允许你在不加前缀的情况下创建全局变量。
+              </li>
+              <li>
+                在作用域中引入无前缀的全局变量是非常不好的做法。
+              </li>
+              <li>
+                全局变量应仅用于插件配置。
+              </li>
+              <li>
+                这不适用于在 <code>autoload</code> 目录中定义的函数。
+              </li>
+            </ul>
+          </li>
+          <li>
+            为脚本局部变量加上 <code>s:</code> 前缀
+            <ul>
+              <li>
+                这可以防止插件之间的命名空间冲突。
+              </li>
+              <li>
+                这也适用于脚本局部函数。
+              </li>
+            </ul>
+          </li>
+          <li>
+            为函数参数加上 <code>a:</code> 前缀
+            <ul>
+              <li>
+                这是由 vim 本身强制执行的。
+              </li>
+            </ul>
+          </li>
+          <li>
+            为函数局部变量加上 <code>l:</code> 前缀
+            <ul>
+              <li>
+                这不是由 vimscript 强制执行的，但这是好做法。
+              </li>
+              <li>
+                它帮助你记住所有其他变量必须加上作用域前缀。
+              </li>
+              <li>
+                <code>l:</code> 可以区分函数局部变量和 vim 预定义变量。例如，<code>count</code> 指的是 <code>v:count</code>，而不是 <code>l:count</code>。
+              </li>
+              <li>
+                它为你的脚本未来防范新 vim 预定义变量的引入提供了保障。
+              </li>
+            </ul>
+          </li>
+          <li>
+            为预定义的 vim 变量加上 <code>v:</code> 前缀
+            <ul>
+              <li>
+                这不是由 vimscript 强制执行的，但这是好做法。
+              </li>
+              <li>
+                它提供了关于（未声明）变量来源的上下文。
+              </li>
+              <li>
+                它提醒你该变量不能被赋值。
+              </li>
+            </ul>
+          </li>
+          <li>
+            为缓冲区局部变量加上 <code>b:</code> 前缀
+            <ul>
+              <li>
+                这对于保持每个缓冲区状态的插件很有用。
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </BODY>
+    </STYLEPOINT>
+```xml
+    <STYLEPOINT title="Strings">
+      <SUMMARY>
+        优先使用单引号。
+      </SUMMARY>
+      <BODY>
+        <p>
+          优先使用单引号字符串。具体优先级顺序如下：
+        </p>
+        <ul>
+          <li>
+            始终对正则表达式使用单引号。
+            <ul>
+              <li>
+                <code>'\s*'</code> 与 <code>"\s*"</code> 不同
+              </li>
+              <li>
+                单引号将避免需要过多的反斜杠。
+              </li>
+              <li>
+                在单引号字符串中，双单引号转义为一个单引号：<code>'example ('')'</code> 表示字符串
+                <code>example (')</code>
+              </li>
+            </ul>
+          </li>
+          <li>
+            如果您的字符串需要转义字符（<code>\n</code>、<code>\t</code> 等），请使用双引号。
+            <ul>
+              <li>
+                转义字符不能在单引号字符串中表达。
+              </li>
+              <li>
+                请记住，在正则表达式中 <code>'\n'</code> 不表示换行符，而是表示 "\n"。只有当您想在字符串中嵌入所表示的字符本身（例如换行符）时，才需要使用双引号。
+              </li>
+            </ul>
+          </li>
+          <li>
+            如果您的字符串不包含转义字符和单引号，请使用单引号字符串。
+            <ul>
+              <li>
+                vimscript 中的大多数字符串都是正则表达式，因此这提供了最大的一致性。
+              </li>
+            </ul>
+          </li>
+          <li>
+            如果您的非正则表达式字符串包含单引号但不包含双引号，请使用双引号。
+            <ul>
+              <li>
+                如果没有必要，不要费心转义字符串。
+              </li>
+              <li>
+                这与 python 字符串规则类似。
+              </li>
+            </ul>
+          </li>
+          <li>
+            如果您的字符串同时包含单引号和双引号，请使用需要较少转义的引号样式。
+            <ul>
+              <li>
+                在平局情况下，优先选择单引号。
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </BODY>
+    </STYLEPOINT>
+
+    <STYLEPOINT title="Settings">
+      <SUMMARY>
+        优先使用长名称。本地设置设置。
+      </SUMMARY>
+      <BODY>
+        <ul start="6">
+          <li>
+            优先使用内置设置的长名称（即 <code>tabstop</code> 而不是
+            <code>ts</code>）。
+          </li>
+          <li>
+            设置本地设置，除非您明确想要设置全局设置。
+            <ul>
+              <li>
+                使用 <code>setlocal</code> 和 <code>&amp;l:</code> 而不是
+                <code>set</code> 和 <code>&amp;</code>。
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </BODY>
+    </STYLEPOINT>
+  </CATEGORY>
+  <CATEGORY title="Usage Guide">
+    <p>
+      Vim 插件应提供以下任意或所有功能：
+      <strong>命令、</strong> <strong>自动命令、</strong>
+      <strong>函数、</strong> <strong>状态栏标志，以及</strong>
+      <strong>映射。</strong>
+    </p>
+```
+<STYLEPOINT title="Commands">
+      <SUMMARY>
+        <ul>
+          <li>在<code>plugin/commands.vim</code>中定义。</li>
+          <li>命令名称应像这样：CommandNamesLikeThis。</li>
+          <li>优先使用语义名称而不是统一前缀。</li>
+          <li>不要使用<code>[!]</code></li>
+          <li>将逻辑提取到函数中。</li>
+        </ul>
+      </SUMMARY>
+      <BODY>
+        <ul>
+          <li>
+            <code>CommandNamesLikeThis</code>
+          </li>
+          <li>
+            命令应在一个块中定义，且它们之间没有空白。
+            <ul>
+              <li>
+                以牺牲共同前缀为代价，语义化命名命令。
+              </li>
+              <li>
+                <BAD_CODE_SNIPPET>
+                  command WhitespaceFixTrailing
+                  command WhitespaceFixIndentation
+                </BAD_CODE_SNIPPET>
+                <CODE_SNIPPET>
+                  command FixTrailingWhitespace
+                  command FixIndentation
+                </CODE_SNIPPET>
+              </li>
+            </ul>
+          </li>
+          <li>
+            使用<code>command</code>而不使用感叹号。
+            <ul>
+              <li>
+                这会在启动时立即通知用户命令名称冲突。
+              </li>
+              <li>
+                命令名称冲突是错误的，不应静默失败。
+              </li>
+              <li>
+                插件受到防止重新进入的保护，因此单个vim会话永远不应尝试重新定义已定义的命令。
+              </li>
+            </ul>
+          </li>
+          <li>
+            不要在命令中放置逻辑。
+            <ul>
+              <li>
+                改为委托给函数。
+              </li>
+              <li>
+                在参数之前传递非参数命令参数（<code>&lt;bang&gt;</code>，<code>&lt;register&gt;</code>等），然后是参数（<code>&lt;f-args&gt;</code>等）。
+              </li>
+              <li>
+                否则，可变长度参数函数难以实现。
+              </li>
+            </ul>
+          </li>
+          <li>
+            不要自动加载命令。
+            <ul>
+              <li>
+                自动加载的命令在同一文件中的函数被调用之前不可用。
+              </li>
+              <li>
+                打算在.vimrc中使用的命令应在使用maktaba的插件中定义在<code>instant/commands.vim</code>文件中，或者通过非maktaba插件中的自动加载函数明确安装。
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <SUBSECTION title="Conventions">
+          <ul>
+            <li>
+              将<code>&lt;bang&gt;</code>传递给函数，格式为<code>'&lt;bang&gt;' == '!'</code>。
+              <ul>
+                <li>
+                  函数应接收一个布尔参数，而不是字符串。
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </SUBSECTION>
+      </BODY>
+    </STYLEPOINT>
+<STYLEPOINT title="Autocommands">
+  <SUMMARY>
+    <ul>
+      <li>在<code>plugin/autocmds.vim</code>中定义。</li>
+      <li>使用augroup。</li>
+      <li>augroup_names_like_this。</li>
+      <li>首先清除augroup。</li>
+      <li>将逻辑提取到函数中。</li>
+    </ul>
+  </SUMMARY>
+  <BODY>
+    <ul>
+      <li>
+        所有自动命令应在<code>plugin/autocmds.vim</code>文件中定义。
+        <ul>
+          <li>
+            这允许用户使用<code>Glaive myplugin !plugin[autocmds]</code>禁用您的自动命令。
+          </li>
+        </ul>
+      </li>
+      <li>
+        在<code>augroup</code>块中声明所有自动命令。
+        <ul>
+          <li>
+            这允许使用<code>autocmd!</code>清除您的自动命令。
+          </li>
+          <li>
+            如果您的插件只有一个<code>augroup</code>，则<code>augroup</code>名称应与您的插件名称相同，并用下划线替换任何连字符。
+          </li>
+          <li>
+            否则，<code>augroup</code>名称应以您的插件名称开头，后跟下划线。
+          </li>
+        </ul>
+      </li>
+      <li>
+        不要在自动命令中放置逻辑。
+        <ul>
+          <li>
+            应委托给函数。
+          </li>
+        </ul>
+      </li>
+      <li>
+        创建新的<code>augroup</code>时，使用<code>autocmd!</code>清除它。
+        <ul>
+          <li>
+            这允许您的插件可以重新进入。
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </BODY>
+</STYLEPOINT>
+<STYLEPOINT title="Functions">
+      <SUMMARY>
+        <ul>
+          <li>函数名应像这样：FunctionNamesLikeThis。</li>
+          <li>自动加载所有函数。</li>
+          <li>脚本本地函数名前缀应为<code>s:</code></li>
+          <li>使用<code>[!]</code>。</li>
+          <li>使用<code>[abort]</code>。</li>
+        </ul>
+      </SUMMARY>
+      <BODY>
+        <ul>
+          <li>
+            <code>FunctionNamesLikeThis</code>
+          </li>
+          <li>
+            所有脚本本地函数名前缀应为<code>s:</code>
+          </li>
+          <li>
+            不要提供全局函数。应使用自动加载函数。
+          </li>
+          <li>
+            在顶级函数之间放置两行空白。
+          </li>
+          <li>
+            所有函数应使用<code>abort</code>声明。
+            <ul>
+              <li>
+                如果不这样做，函数的行为将取决于它是否在堆栈上的某个<code>try..endtry</code>块中被调用。
+              </li>
+              <li>
+                <code>abort</code>关键字强制函数一致地行动。
+              </li>
+              <li>
+                如果没有它，函数可能会（也可能不会）在发生错误后尝试继续执行。
+              </li>
+            </ul>
+          </li>
+          <li>
+            使用带有感叹号的<code>function!</code>。
+            <ul>
+              <li>
+                这允许开发者重新加载他们的脚本，并在不抱怨的情况下重新加载函数。
+              </li>
+              <li>
+                函数名永远不应冲突，因为函数应始终是脚本本地或在<code>autoload</code>目录中定义。
+              </li>
+              <li>
+                如果在自动加载文件中的任何函数中未使用感叹号，当vim尝试重新加载文件时（例如，如果你引用了一个不存在的自动加载函数），将导致神秘的错误。
+              </li>
+            </ul>
+          </li>
+          <li>
+            使用<code>...</code>表示可选参数，而不是参数列表。
+            <ul>
+              <li>
+                Vimscript函数最多接受20个参数。
+              </li>
+              <li>
+                列表没有这样的长度限制。
+              </li>
+              <li>
+                如果你使用<code>...</code>表示参数列表，当给出太多参数时，你的函数可能会崩溃。
+              </li>
+            </ul>
+          </li>
+          <li>
+            抛出异常而不是打印错误。
+            <ul>
+              <li>
+                打印的错误无法被捕获。
+              </li>
+              <li>
+                期望错误的顶级函数可以捕获它们并打印错误消息，但即使是这些函数在遇到问题时也应该抛出自己的错误。
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </BODY>
+    </STYLEPOINT>
+<STYLEPOINT title="Mappings">
+      <SUMMARY>
+        <ul>
+          <li>
+            在<code>plugin/mappings.vim</code>中提供可选的键映射。
+          </li>
+          <li>
+            <code>&lt;Plug&gt;</code>映射可以在<code>plugin/plugs.vim</code>中定义（与mappings.vim不同，plugs.vim是默认启用的）。
+          </li>
+        </ul>
+      </SUMMARY>
+      <BODY>
+        <ul>
+          <li>
+            在<code>plugin/mappings.vim</code>中定义键映射，使用<code>maktaba#plugin#MapPrefix</code>获取前缀。
+            <ul>
+              <li>
+                在特殊的<code>plugin/mappings.vim</code>文件中定义的映射默认情况下将被禁用（通过标准的<code>maktaba#plugin#Enter()</code>模板）。
+              </li>
+              <li>
+                用户可以通过<code>Glaive myplugin plugin[mappings]</code>启用键映射。
+              </li>
+            </ul>
+          </li>
+          <li>
+            使用<code>&lt;unique&gt;</code>创建所有映射。
+            <ul>
+              <li>
+                这将在用户有映射冲突时通知他们，而不是悄无声息地覆盖他们现有的映射。
+              </li>
+            </ul>
+          </li>
+          <li>
+            您可以使用<code>&lt;Plug&gt;</code>和您的插件名称在<code>plugin/plugs.vim</code>中提供伪映射（与标准键映射分开）。
+            <ul>
+              <li>
+                <code>&lt;Plug&gt;</code>是一个无法直接输入的序列。
+              </li>
+              <li>
+                您可以这样做<code>noremap &lt;Plug&gt;namespace#MappingName some_key_sequence</code>，然后用户可以执行<code>noremap &lt;leader&gt;x &lt;Plug&gt;namespace#MappingName</code>来利用您的伪映射。
+              </li>
+              <li>
+                伪映射<strong>不应</strong>在<code>plugin/mappings.vim</code>中，否则它们将默认被禁用。
+              </li>
+              <li>
+                此类伪映射应命名为<code>&lt;Plug&gt;</code>，后跟您的插件名称、一个井号和一个唯一的映射名称（像函数一样使用驼峰命名法）。
+              </li>
+            </ul>
+          </li>
+          <li>
+            始终使用<code>noremap</code>命令家族。永远不要使用<code>map</code>命令家族。
+            <ul>
+              <li>
+                <code>map</code>依赖于用户现有的映射，可能会做任何事情。
+              </li>
+            </ul>
+          </li>
+          <li>
+            仅在命令既进行移动又接受范围时使用<code>noremap</code>。
+            <ul>
+              <li>
+                <code>noremap</code>在普通、可视和操作待定模式下创建映射。
+              </li>
+              <li>
+                如果您不希望使用所有这些模式，请明确使用<code>nnoremap</code>、<code>onoremap</code>或<code>vnoremap</code>。
+              </li>
+            </ul>
+          </li>
+          <li>
+            在映射中访问脚本局部变量时，始终使用<code>&lt;SID&gt;</code>代替<code>s:</code>。
+            <ul>
+              <li>
+                使用<code>s:</code>通常会失败，因为映射会尝试输入一个字面上的s和冒号。
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </BODY>
+    </STYLEPOINT>
+  </CATEGORY>
+  <CATEGORY title="Conventions">
+    <STYLEPOINT title="Dependency Checking">
+      <SUMMARY>
+        在addon-info.json中声明依赖并使用<code>maktaba</code>。
+      </SUMMARY>
+      <BODY>
+        <p>
+          在addon-info.json中声明依赖允许符合标准的插件管理器（如VAM）确保依赖已安装。有关详细信息，请参阅<a href="https://github.com/MarcWeber/vim-addon-manager/blob/master/doc/vim-addon-manager-additional-documentation.txt">VAM文档</a>。
+        </p>
+        <p>
+调用<code>maktaba#library#Require</code>从依赖代码在运行时确保依赖已被安装，并且它们不包含不安全的非库文件。
+        </p>
+      </BODY>
+    </STYLEPOINT>
+```xml
+    <STYLEPOINT title="Statusline Flags">
+      <SUMMARY>
+        使用 <code>&lt;plugin-name&gt;#status#Status()</code> 或其更细粒度的变体来提供状态栏标志。
+      </SUMMARY>
+      <BODY>
+        <p>
+          以下是向用户展示状态栏标志的约定。插件不应修改用户的状态栏，除非该插件的唯一目的是这样做（如powerline等）。
+        </p>
+        <ul>
+          <li>
+            在 <code>&lt;plugin-name&gt;#status</code> 命名空间下提供
+            <code class="green">Info</code>,
+            <code class="yellow">Alert</code>,
+            <code class="orange">Warning</code>, 和
+            <code class="red">Error</code> 函数。
+          </li>
+          <li>
+            <code class="green">Info</code> 应提供有关缓冲区状态的信息。
+            <ul>
+              <li>
+                示例：当前的git分支。
+              </li>
+            </ul>
+          </li>
+          <li>
+            <code class="yellow">Alert</code> 应提供缓冲区非标准的安静提醒。
+            <ul>
+              <li>
+                示例：只读设置已开启。
+              </li>
+            </ul>
+          </li>
+          <li>
+            <code class="orange">Warning</code> 应提供有关缓冲区当前状态的警告。
+            <ul>
+              <li>
+                示例：文件已在其他地方被编辑。
+              </li>
+            </ul>
+          </li>
+          <li>
+            <code class="red">Error</code> 应引起对缓冲区严重问题的关注。
+            <ul>
+              <li>
+                示例：文件未通过语法检查。
+              </li>
+            </ul>
+          </li>
+          <li>
+            通过遵循这些约定，用户可以轻松构建自己的状态栏，自定义详细程度和颜色以符合他们的喜好。
+          </li>
+          <li>
+            所有函数都不应接受参数，并且应返回空字符串或用方括号括起来的字符串，例如
+            <code>[Google]</code>。例如：
+            <ul>
+              <li>
+                尾随空白插件可能会在文件包含尾随空白时返回 <code>[$]</code>
+              </li>
+              <li>
+                散文写作插件可能会在vim处于写作模式时返回 <code>[write]</code>。
+              </li>
+            </ul>
+          </li>
+          <li>
+            考虑提供 <code>&lt;plugin-name&gt;#status#Status</code> 函数。
+            <ul>
+              <li>
+                它应返回 <code>Error</code>、<code>Warning</code>、<code>Alert</code> 或 <code>Info</code> 中第一个非空的。
+              </li>
+              <li>
+                这对于只想要最相关标志且没有彩色状态栏的用户很有用。
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </BODY>
+    </STYLEPOINT>
+  </CATEGORY>
+  <CATEGORY title="Forbidden Commands">
+    <p>
+      这些是只能由有限数量的插件使用的命令，通常不应由您的插件使用。
+    </p>
+    <ul>
+      <li>
+        不要使用 <code>:match :2match</code> 或 <code>:3match</code>
+        <ul>
+          <li>
+            这些是为用户和vim本身保留的。
+          </li>
+          <li>
+            使用 <code>matchadd()</code> 来创建特定于您的插件的匹配级别。
+          </li>
+        </ul>
+      </li>
+      <li>
+        不要使用 <code>echoerr</code>。
+        <ul>
+          <li>
+            <code>echoerr</code> 不会打印您认为的红色错误消息。
+          </li>
+          <li>
+            <code>echoerr</code> 会打印错误消息以及调用 <code>echoerr</code> 的代码的上下文。
+          </li>
+          <li>
+            <code>echoerr</code> 最适合用于调试。
+          </li>
+```
+<li>
+            如果你想要红色错误栏，请将<code>echohl</code>与<code>echomsg</code>一起使用。
+          </li>
+        </ul>
+      </li>
+      <li>
+        使用<code>echomsg</code>而不是<code>echo</code>。
+        <ul>
+          <li>
+            <code>echomsg</code>消息可以通过<code>:messages</code>命令查看。
+          </li>
+          <li>
+            <code>echo</code>消息在重绘时会永久消失，这对于未能及时阅读消息的用户来说可能非常烦人。
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </CATEGORY>
+  <CATEGORY title="Layout">
+    <p>
+      如果适用，请按照以下部分排列<code>plugin/</code>文件，每部分之间用两行空行分隔：
+    </p>
+    <ul>
+      <li>
+        脚本常量的声明
+      </li>
+      <li>
+        配置变量的声明
+      </li>
+      <li>
+        其他声明（<code>commands.vim</code>文件中的命令，<code>autocmds.vim</code>文件中的自动命令等）
+      </li>
+    </ul>
+    <p>
+      如果适用，请按照以下部分排列<code>autoload/</code>文件，每部分之间用两行空行分隔：
+    </p>
+    <ul>
+      <li>
+        <code>maktaba#library#Require</code>调用
+      </li>
+      <li>
+        脚本局部变量
+      </li>
+      <li>
+        脚本局部函数
+      </li>
+      <li>
+        私有自动加载函数
+      </li>
+      <li>
+        公共自动加载函数
+      </li>
+    </ul>
+    <p>
+      这是推荐的惯例，并不强制执行。
+    </p>
+
+  </CATEGORY>
+  <CATEGORY title="Recommended Shortcuts">
+    
+    <p>
+      使用以下快捷方式：
+    </p>
+    <ul>
+      <li>
+        使用<code>catch</code>而不是<code>catch /.*/</code>
+      </li>
+      <li>
+        当返回值没有语义目的时，使用<code>return</code>而不是<code>return 0</code>。
+      </li>
+    </ul>
+
+  </CATEGORY>
+  <CATEGORY title="Errata">
+    <p>
+      本节探讨了vimscript的一些较为隐晦的角落，解释了你希望不必了解的语言病理。
+      
+    </p>
+
+    <STYLEPOINT title="Compatibility Mode">
+      <SUMMARY>
+        如果你不支持vi兼容模式，请优雅地失败。
+      </SUMMARY>
+      <BODY>
+        <p>
+          当<code>compatible</code>被设置时，许多vim功能将不可用。最常影响vimscript作者的vim功能是行继续。
+        </p>
+        <p>
+          如果你希望你的插件在启用vi兼容模式的vim中工作，你需要在每个插件文件的开头保存兼容选项，清除它们，并在每个插件文件的末尾恢复它们。详细信息请参见<code>:help use-cpo-save</code>。
+        </p>
+        <p>
+          依赖maktaba的插件通常不需要担心兼容模式，因为maktaba目前只是禁用它，并打印一个警告。
+        </p>
+      </BODY>
+    </STYLEPOINT>
+  </CATEGORY>
+
+  <p align="right">
+    修订版 1.1
+  </p>
+
+  
+  <address>
+    Nate Soares<br/>
+    Artemis Sparks<br/>
+    David Barnett<br/>
+  </address>
+</GUIDE>

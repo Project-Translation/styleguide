@@ -1,0 +1,29 @@
+{
+    "projectTranslator.currentVendor": "grok",
+    "projectTranslator.ignorePaths": [
+        "_includes/**",
+        ".github/**",
+        ".vscode/**",
+        "assets",
+        "i18n/**",
+        "_config.yaml",
+        "CODE_OF_CONDUCT.md",
+        "favicon.ico",
+        "pylintrc",
+        "LICENSE"
+    ],
+    "projectTranslator.specifiedFolders": [
+        {
+            "sourceFolder": {
+                "lang": "en-us",
+                "path": "."
+            },
+            "destFolders": [
+                {
+                    "lang": "zh-cn",
+                    "path": "i18n/zh-cn"
+                }
+            ]
+        }
+    ]
+}
