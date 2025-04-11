@@ -1046,7 +1046,7 @@ function handleResponse(response) {
 <CATEGORY title="示例">
 <STYLEPOINT title="YouTube JSON API">
 <SUMMARY>
-这是一个YouTube JSON API响应对象的示例。您可以在这里了解更多关于YouTube的JSON API的信息：<a href="https://jqknono.github.io/styleguide">https://jqknono.github.io/styleguide</a>。
+这是一个YouTube JSON API响应对象的示例。您可以在这里了解更多关于YouTube的JSON API的信息：<a href="https://project-translation.github.io/styleguide/i18n/zh-cn">https://project-translation.github.io/styleguide/i18n/zh-cn</a>。
 </SUMMARY>
 <BODY>
 <CODE_SNIPPET>
@@ -1141,7 +1141,7 @@ function handleResponse(response) {
 应避免在属性名称中使用的保留JavaScript词列表。
 </SUMMARY>
 <BODY>
-<p>以下词语由JavaScript语言保留，不能使用点表示法引用。该列表代表当前对关键字的最佳了解；根据您的具体执行环境，该列表可能会发生变化或有所不同。</p><p>来自<a href="https://jqknono.github.io/styleguide">ECMAScript语言规范第5版</a></p>
+<p>以下词语由JavaScript语言保留，不能使用点表示法引用。该列表代表当前对关键字的最佳了解；根据您的具体执行环境，该列表可能会发生变化或有所不同。</p><p>来自<a href="https://project-translation.github.io/styleguide/i18n/zh-cn">ECMAScript语言规范第5版</a></p>
 <BAD_CODE_SNIPPET>
 abstract
 boolean break byte
@@ -1166,7 +1166,7 @@ yield
 </CATEGORY>
 <HR/>
 <p align="center">
-除非另有<a href="https://jqknono.github.io/styleguide/policies.html">说明</a>，本页内容根据<a href="https://creativecommons.org/licenses/by/3.0/">知识共享署名3.0许可证</a>授权，代码示例根据<a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0许可证</a>授权。
+除非另有<a href="https://project-translation.github.io/styleguide/i18n/zh-cn/policies.html">说明</a>，本页内容根据<a href="https://creativecommons.org/licenses/by/3.0/">知识共享署名3.0许可证</a>授权，代码示例根据<a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0许可证</a>授权。
 </p>
 <p align="right">
 修订版 0.9

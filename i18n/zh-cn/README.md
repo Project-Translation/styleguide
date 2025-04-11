@@ -45,27 +45,27 @@
 
 <a rel="license" href="https://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/3.0/88x31.png" /></a>
 
-[cpp]: https://jqknono.github.io/styleguide/cppguide.html
-[csharp]: https://jqknono.github.io/styleguide/csharp-style.html
+[cpp]: https://project-translation.github.io/styleguide/i18n/zh-cn/cppguide.html
+[csharp]: https://project-translation.github.io/styleguide/i18n/zh-cn/csharp-style.html
 [swift]: https://jqknono.github.io/swift/
 [objc]: objcguide.md
 [gh-tracker]: https://github.com/google/styleguide/issues
 [go]: go/
-[java]: https://jqknono.github.io/styleguide/javaguide.html
-[json]: https://jqknono.github.io/styleguide/jsoncstyleguide.xml
+[java]: https://project-translation.github.io/styleguide/i18n/zh-cn/javaguide.html
+[json]: https://project-translation.github.io/styleguide/i18n/zh-cn/jsoncstyleguide.xml
 [kotlin]: https://developer.android.com/kotlin/style-guide
-[py]: https://jqknono.github.io/styleguide/pyguide.html
-[r]: https://jqknono.github.io/styleguide/Rguide.html
-[sh]: https://jqknono.github.io/styleguide/shellguide.html
-[htmlcss]: https://jqknono.github.io/styleguide/htmlcssguide.html
-[js]: https://jqknono.github.io/styleguide/jsguide.html
-[markdown]: https://jqknono.github.io/styleguide/docguide/style.html
-[ts]: https://jqknono.github.io/styleguide/tsguide.html
-[angular]: https://jqknono.github.io/styleguide/angularjs-google-style.html
-[cl]: https://jqknono.github.io/styleguide/lispguide.xml
-[vim]: https://jqknono.github.io/styleguide/vimscriptguide.xml
+[py]: https://project-translation.github.io/styleguide/i18n/zh-cn/pyguide.html
+[r]: https://project-translation.github.io/styleguide/i18n/zh-cn/Rguide.html
+[sh]: https://project-translation.github.io/styleguide/i18n/zh-cn/shellguide.html
+[htmlcss]: https://project-translation.github.io/styleguide/i18n/zh-cn/htmlcssguide.html
+[js]: https://project-translation.github.io/styleguide/i18n/zh-cn/jsguide.html
+[markdown]: https://project-translation.github.io/styleguide/i18n/zh-cn/docguide/style.html
+[ts]: https://project-translation.github.io/styleguide/i18n/zh-cn/tsguide.html
+[angular]: https://project-translation.github.io/styleguide/i18n/zh-cn/angularjs-google-style.html
+[cl]: https://project-translation.github.io/styleguide/i18n/zh-cn/lispguide.xml
+[vim]: https://project-translation.github.io/styleguide/i18n/zh-cn/vimscriptguide.xml
 [emacs]: https://raw.githubusercontent.com/google/styleguide/gh-pages/google-c-style.el
-[xml]: https://jqknono.github.io/styleguide/xmlstyle.html
+[xml]: https://project-translation.github.io/styleguide/i18n/zh-cn/xmlstyle.html
 [dart]: https://www.dartlang.org/guides/language/effective-dart
 [ccl]: https://creativecommons.org/licenses/by/3.0/
 [SCM]: https://en.wikipedia.org/wiki/Source_control_management

@@ -2,7 +2,7 @@
 
 # Go 风格决策
 
-https://jqknono.github.io/styleguide/go/decisions
+https://project-translation.github.io/styleguide/i18n/zh-cn/go/decisions
 
 [概览](index) | [指南](guide) | [决策](decisions) |
 [最佳实践](best-practices)
@@ -23,7 +23,7 @@ https://jqknono.github.io/styleguide/go/decisions
 
 本文档**并非详尽无遗**，并将随时间增长。在[核心风格指南](guide)与此处提供的建议相矛盾的情况下，**风格指南优先**，本文档应相应更新。
 
-有关完整的 Go 风格文档集，请参见[概览](https://jqknono.github.io/styleguide/go#about)。
+有关完整的 Go 风格文档集，请参见[概览](https://project-translation.github.io/styleguide/i18n/zh-cn/go#about)。
 
 以下部分已从风格决策移至指南的其他部分：
 
@@ -566,7 +566,7 @@ func (n *Node) Parent2() (node *Node, err error)
 > 在上面的 [`WithTimeout`] 中，实际代码使用了 [`CancelFunc`] 而不是结果参数列表中的原始 `func()`，并且几乎不需要努力就能进行文档化。
 
 [裸返回]: https://tour.golang.org/basics/7
-[GoTip #38: 函数作为命名类型]: https://jqknono.github.io/styleguide/go/index.html#gotip
+[GoTip #38: 函数作为命名类型]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip
 [`WithTimeout`]: https://pkg.go.dev/context#WithTimeout
 [`CancelFunc`]: https://pkg.go.dev/context#CancelFunc
 
@@ -980,7 +980,7 @@ if err != nil {
 
 有关更多详细信息，请参见[Go提示#1：视线]和[TotT：通过减少嵌套来降低代码复杂性](https://testing.googleblog.com/2017/06/code-health-reduce-nesting-reduce.html)。
 
-[Go提示#1：视线]: https://jqknono.github.io/styleguide/go/index.html#gotip
+[Go提示#1：视线]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip
 
 <a id="language"></a>
 
@@ -1845,9 +1845,9 @@ Go 接口通常应属于*使用*接口类型值的包，而不是*实现*接口�
 
 **TODO:** 编写更深入的接口文档，并在此处链接。
 
-[GoTip #42: 编写测试存根]: https://jqknono.github.io/styleguide/go/index.html#gotip
-[GoTip #49: 接受接口，返回具体类型]: https://jqknono.github.io/styleguide/go/index.html#gotip
-[GoTip #78: 最小可行接口]: https://jqknono.github.io/styleguide/go/index.html#gotip
+[GoTip #42: 编写测试存根]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip
+[GoTip #49: 接受接口，返回具体类型]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip
+[GoTip #78: 最小可行接口]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip
 [real implementation]: best-practices#use-real-transports
 [public API]: https://abseil.io/resources/swe-book/html/ch12.html#test_via_public_apis
 [double types]: https://abseil.io/resources/swe-book/html/ch13.html#techniques_for_using_test_doubles
@@ -2184,8 +2184,8 @@ var (
 另见：
 
 *   [每周提示#45：避免使用标志，尤其是在库代码中][totw-45]
-*   [Go提示#10：配置结构体和标志](https://jqknono.github.io/styleguide/go/index.html#gotip)
-*   [Go提示#80：依赖注入原则](https://jqknono.github.io/styleguide/go/index.html#gotip)
+*   [Go提示#10：配置结构体和标志](https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip)
+*   [Go提示#80：依赖注入原则](https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip)
 
 [标准`flag`包]: https://golang.org/pkg/flag/
 [混合大小写]: guide#mixed-caps
@@ -2479,7 +2479,7 @@ if tail != `Fran & Freddie's Diner"` {
 
 调用 `t.Fatal` 主要用于报告意外的错误条件，当后续的比较失败没有意义时。
 
-对于表驱动测试，考虑使用子测试，并使用 `t.Fatal` 而不是 `t.Error` 和 `continue`。另见 [GoTip #25: 子测试：让你的测试更精简](https://jqknono.github.io/styleguide/go/index.html#gotip)。
+对于表驱动测试，考虑使用子测试，并使用 `t.Fatal` 而不是 `t.Error` 和 `continue`。另见 [GoTip #25: 子测试：让你的测试更精简](https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip)。
 
 **最佳实践：** 关于何时应使用 `t.Fatal` 的更多讨论，请参见[最佳实践](best-practices#t-fatal)。
 
@@ -2604,7 +2604,7 @@ Go 中的错误值通常有一个面向人类的组件和一个用于语义控�
 > ```
 
 另见
-[GoTip #13: 为检查设计错误](https://jqknono.github.io/styleguide/go/index.html#gotip)。
+[GoTip #13: 为检查设计错误](https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip)。
 
 [tott-350]: https://testing.googleblog.com/2015/01/testing-on-toilet-change-detector-tests.html
 [`cmpopts.EquateErrors`]: https://pkg.go.dev/github.com/google/go-cmp/cmp/cmpopts#EquateErrors
@@ -2680,7 +2680,7 @@ t.Run("检查没有提到划伤的唱片或气垫船", ...)
 t.Run("AM/PM 混淆", ...)
 ```
 
-另见 [Go 提示 #117：子测试名称](https://jqknono.github.io/styleguide/go/index.html#gotip)。
+另见 [Go 提示 #117：子测试名称](https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip)。
 
 [Go 测试运行器]: https://golang.org/cmd/go/#hdr-Testing_flags
 [识别函数的输入]: #identify-the-input
@@ -2737,7 +2737,7 @@ func TestCompare(t *testing.T) {
 
 您可以将表驱动测试与多个测试函数结合使用。例如，当测试函数的输出完全匹配预期输出，并且函数对无效输入返回非nil错误时，编写两个独立的表驱动测试函数是最佳方法：一个用于正常的非错误输出，一个用于错误输出。
 
-[GoTip #50: 不相关的表测试]: https://jqknono.github.io/styleguide/go/index.html#gotip
+[GoTip #50: 不相关的表测试]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/index.html#gotip
 
 <a id="表测试数据驱动"></a>
 
@@ -3015,8 +3015,8 @@ Go 标准库提供了 [`testing` 包]。这是 Google 代码库中 Go 代码唯�
 
 自然，如果风格指南未涵盖的任何内容需要更多讨论，作者欢迎提出问题——无论是在具体的审查中，还是在内部消息板上。
 
-[复合声明最佳实践]: https://jqknono.github.io/styleguide/go/best-practices#vardeclcomposite
-[初始化最佳实践]: https://jqknono.github.io/styleguide/go/best-practices#vardeclinitialization
+[复合声明最佳实践]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/best-practices#vardeclcomposite
+[初始化最佳实践]: https://project-translation.github.io/styleguide/i18n/zh-cn/go/best-practices#vardeclinitialization
 
 <!--
 
